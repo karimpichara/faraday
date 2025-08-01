@@ -1,0 +1,101 @@
+{% extends "_base.html" %}
+
+{% block title %}Enrolamiento Asegurado - Iniciar Sesión{% endblock %}
+
+{% block content %}
+<div class="container centered">
+    <div class="login-container">
+        <div class="login-form">
+            <div class="login-header">
+                <img src="{{ url_for('static', filename='img/logo_cre_blanco.png') }}" alt="Logo Enrolamiento Asegurado"
+                    class="login-logo">
+                <h1><span class="emoji">💻</span> Control de TOA</h1>
+
+                <h2 class="login-section-title">Iniciar Sesión</h2>
+                <p class="login-section-desc">Introduce tu usuario y contraseña para continuar</p>
+            </div>
+
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            <div class="flash-messages">
+                {% for category, message in messages %}
+                <div class="flash-message flash-{{ category }}">
+                    {{ message }}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            {% endwith %}
+
+            <form method="POST" action="{{ url_for('main.login') }}">
+                <div class="form-group">
+                    <label for="username" class="form-label">Usuario:</label>
+                    <input type="text" id="username" name="username" class="form-input"
+                        placeholder="Introduce tu usuario" required autocomplete="username"
+                        value="{{ request.form.username if request.form.username }}">
+                </div>
+
+                <div class="form-group">
+                    <label for="password" class="form-label">Contraseña:</label>
+                    <input type="password" id="password" name="password" class="form-input"
+                        placeholder="Introduce tu contraseña" required autocomplete="current-password">
+                </div>
+
+                <div class="checkbox-group">
+                    <input type="checkbox" id="remember" name="remember" value="1">
+                    <label for="remember">Recordar mi sesión</label>
+                </div>
+
+                <button type="submit" class="login-btn">
+                    Iniciar Sesión
+                </button>
+            </form>
+
+            <div class="security-note">
+                Tu sesión está protegida con cifrado de extremo a extremo
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Auto-focus username field
+    document.addEventListener('DOMContentLoaded', function () {
+        const usernameField = document.getElementById('username');
+        if (usernameField && !usernameField.value) {
+            usernameField.focus();
+        }
+    });
+
+    // Form validation
+    document.querySelector('form').addEventListener('submit', function (e) {
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value;
+
+        if (!username || !password) {
+            e.preventDefault();
+
+            // Add error styling
+            if (!username) {
+                document.getElementById('username').classList.add('error');
+            }
+            if (!password) {
+                document.getElementById('password').classList.add('error');
+            }
+
+            // Show error message
+            alert('Por favor completa todos los campos');
+        }
+    });
+
+    // Remove error styling on input
+    document.querySelectorAll('.form-input').forEach(input => {
+        input.addEventListener('input', function () {
+            this.classList.remove('error');
+        });
+    });
+</script>
+{% endblock %}

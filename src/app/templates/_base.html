@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Control de TOA{% endblock %}</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/favicon.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    {% block head %}{% endblock %}
+</head>
+
+<body>
+    {% if username %}
+    <!-- User Info -->
+    <div class="user-info">
+        👋 Hola, {{ username }}
+    </div>
+
+    <!-- Logout Button -->
+    <a href="{{ url_for('main.logout') }}" class="logout-btn">
+        🚪 Cerrar Sesión
+    </a>
+    {% endif %}
+
+    {% block content %}{% endblock %}
+
+    {% block scripts %}{% endblock %}
+</body>
+
+</html>

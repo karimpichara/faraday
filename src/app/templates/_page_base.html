@@ -1,0 +1,19 @@
+{% extends "_base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="login-header">
+        <img src="{{ url_for('static', filename='img/logo_cre_blanco.png') }}" alt="Logo Control de TOA"
+            class="login-logo">
+    </div>
+
+    {% block page_header %}{% endblock %}
+
+    {% block page_content %}{% endblock %}
+
+    <div class="footer">
+        <p>Creaciones Tecnológicas</p>
+        <div class="version">v1.0.0</div>
+    </div>
+</div>
+{% endblock %}
