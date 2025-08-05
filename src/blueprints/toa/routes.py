@@ -7,7 +7,7 @@ from flask import Blueprint, jsonify, request
 from src.services.historia_iniciados_service import HistoriaIniciadosService
 from src.services.empresasExternas_service import EmpresasExternasService
 from src.use_cases.historia_iniciados_useCase import HistoriaIniciadosUseCase
-
+from src.use_cases.empresas_externas_useCase import EmpresasExternasUseCase
 
 toa_bp = Blueprint("toa", __name__, url_prefix="/toa")
 
@@ -147,5 +147,12 @@ def set_empresas_externas_toa():
         file = request.files["file"]
         if file.filename == "":
             return jsonify({"error": "No selected file"}), 400
+        if not file.filename.endswith(".json"):
+            return jsonify({"error": "File must be a JSON file"}), 400
+
+        empresas_externas_service = EmpresasExternasService()
+        empresas_externas_use_case = EmpresasExternasUseCase(empresas_externas_service)
+        empresas_externas_use_case.set_empresas_externas_toa(file)
+        return jsonify({"message": "File uploaded successfully"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500

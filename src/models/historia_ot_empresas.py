@@ -26,14 +26,15 @@ class HistoriaOtEmpresas(BaseModel):
     hora_flag_niveles = db.Column(String(200), nullable=False)
     inicio = db.Column(String(200), nullable=False)
     intervencion_neutra = db.Column(String(200), nullable=False)
-    notas_consulta_vecino = db.Column(String(600), nullable=True)
-    notas_consulta_vecino_ultimo = db.Column(String(600), nullable=True)
+    notas_consulta_vecino = db.Column(String(8000), nullable=True)
+    notas_consulta_vecino_ultimo = db.Column(String(8000), nullable=True)
     qr_drop = db.Column(String(200), nullable=False)
     rut_tecnico = db.Column(String(200), nullable=False)
     tipo_red_producto = db.Column(String(200), nullable=False)
     hora_ultima_vecino = db.Column(String(200), nullable=True)
     hora_qr = db.Column(String(200), nullable=False)
     tipo_actividad = db.Column(String(200), nullable=False)
+    zona_de_trabajo = db.Column(String(200), nullable=False)
 
     @classmethod
     def get_historia_iniciados_all(cls) -> list[dict[str, Any]]:
@@ -91,6 +92,7 @@ class HistoriaOtEmpresas(BaseModel):
     ) -> (
         None
     ):  # la zona puede sur norte, centro o metropolitana, las empresas son las que aparecen en el toa
+        print(f"comenzando a cargar a la bd")
         try:
             nuevo_usuario = cls(
                 zona=zona,
@@ -127,4 +129,5 @@ class HistoriaOtEmpresas(BaseModel):
             db.session.commit()
         except Exception as e:
             db.session.rollback()
+            print(f"error al cargar a la bd: {e}")
             raise e

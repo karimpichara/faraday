@@ -17,9 +17,10 @@ def create_app():
     migrate.init_app(app, db)
     # Register blueprints
     from src.blueprints.main import main_bp
+    from src.blueprints.toa import toa_bp
 
     app.register_blueprint(main_bp)
-
+    app.register_blueprint(toa_bp)
     return app
 
 

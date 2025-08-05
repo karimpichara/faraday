@@ -1,8 +1,8 @@
-"""primeras tablas
+"""primera migracion
 
-Revision ID: 43ea8a753a37
+Revision ID: 0c9726c3ebf1
 Revises: 
-Create Date: 2025-08-04 16:54:18.323342
+Create Date: 2025-08-05 15:53:41.134733
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '43ea8a753a37'
+revision = '0c9726c3ebf1'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -54,14 +54,15 @@ def upgrade():
     sa.Column('hora_flag_niveles', sa.String(length=200), nullable=False),
     sa.Column('inicio', sa.String(length=200), nullable=False),
     sa.Column('intervencion_neutra', sa.String(length=200), nullable=False),
-    sa.Column('notas_consulta_vecino', sa.String(length=600), nullable=True),
-    sa.Column('notas_consulta_vecino_ultimo', sa.String(length=600), nullable=True),
+    sa.Column('notas_consulta_vecino', sa.String(length=8000), nullable=True),
+    sa.Column('notas_consulta_vecino_ultimo', sa.String(length=8000), nullable=True),
     sa.Column('qr_drop', sa.String(length=200), nullable=False),
     sa.Column('rut_tecnico', sa.String(length=200), nullable=False),
     sa.Column('tipo_red_producto', sa.String(length=200), nullable=False),
     sa.Column('hora_ultima_vecino', sa.String(length=200), nullable=True),
     sa.Column('hora_qr', sa.String(length=200), nullable=False),
     sa.Column('tipo_actividad', sa.String(length=200), nullable=False),
+    sa.Column('zona_de_trabajo', sa.String(length=200), nullable=False),
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('uuid', sa.String(length=36), nullable=False),
     sa.Column('created_at', sa.DateTime(), nullable=False),

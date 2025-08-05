@@ -1,6 +1,7 @@
+import json
+from typing import Any
 from src.services.historia_iniciados_service import HistoriaIniciadosService
 from src.services.empresasExternas_service import EmpresasExternasService
-from typing import Any
 
 
 class HistoriaIniciadosUseCase:
@@ -73,20 +74,31 @@ class HistoriaIniciadosUseCase:
         empresas_externas = (
             self.empresas_externas_service.get_empresas_externas_toa_all()
         )
-        ot_no_ingresadas = []
-        for item in data:
-            validador = False
-            for empresa in empresas_externas:
-                empresa_toa = empresa["nombre_toa"]
-                if empresa_toa in item["Técnico"]:
-                    self.historia_iniciados_service.set_data_to_database(
-                        item, "metropolitana", empresa["nombre_toa"]
-                    )
-                    validador = True
-                    break
-            if not validador:
-                ot_no_ingresadas.append(item)
-        return ot_no_ingresadas
+        try:
+            data = json.load(data)
+        except Exception as e:
+            raise Exception(f"Error al cargar el archivo: {e}")
+        try:
+            ot_no_ingresadas = []
+            for item in data:
+                validador = False
+                for empresa in empresas_externas:
+                    empresa_toa = empresa.nombre_toa
+                    if empresa_toa in item["Técnico"]:
+                        print(
+                            f"se encontro la empresa {empresa_toa} en el item {item['Técnico']}"
+                        )
+                        self.historia_iniciados_service.set_data_to_database(
+                            item, "metropolitana", empresa.nombre_toa
+                        )
+                        validador = True
+                        break
+                if not validador:
+                    ot_no_ingresadas.append(item)
+            return ot_no_ingresadas
+        except Exception as e:
+            print(f"Error al cargar el archivo: {e}")
+            return []
 
     def set_empresas_externas_toa(self, data: dict[str, Any]) -> bool:
         result = self.empresas_externas_service.set_empresas_externas_toa(
