@@ -1,0 +1,55 @@
+# Base model for all models
+# Contains id, uuid, created_at, updated_at, active
+
+import uuid
+from datetime import datetime, timezone
+from typing import Any, Dict
+
+from sqlalchemy import Boolean, DateTime
+
+from src.models import db
+
+
+class ToDictMixin:
+    """Mixin class to add to_dict functionality to SQLAlchemy models."""
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert SQLAlchemy model instance to dictionary."""
+        row_to_dict = self.__dict__.copy()
+        if "_sa_instance_state" in row_to_dict:
+            del row_to_dict["_sa_instance_state"]
+        return row_to_dict
+
+
+class BaseModel(db.Model, ToDictMixin):
+    __abstract__ = True
+
+    id = db.Column(db.Integer, primary_key=True)
+    uuid = db.Column(
+        db.String(36), unique=True, nullable=False, default=lambda: str(uuid.uuid4())
+    )
+    created_at = db.Column(
+        DateTime, nullable=False, default=lambda: datetime.now(timezone.utc)
+    )
+    updated_at = db.Column(
+        DateTime,
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
+    active = db.Column(Boolean, nullable=False, default=True, index=True)
+
+    @classmethod
+    def active_records(cls):
+        """Return query filtered to only active records."""
+        return cls.query.filter_by(active=True)
+
+    def soft_delete(self) -> None:
+        """Mark this record as inactive (soft delete)."""
+        self.active = False
+        self.updated_at = datetime.now(timezone.utc)
+
+    def restore(self) -> None:
+        """Mark this record as active (restore from soft delete)."""
+        self.active = True
+        self.updated_at = datetime.now(timezone.utc)
