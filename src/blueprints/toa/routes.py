@@ -1,9 +1,9 @@
 from flask import Blueprint, jsonify, request
 
-from services.empresas_externas_service import EmpresasExternasService
+from src.services.empresas_externas_service import EmpresasExternasService
 from src.services.historia_iniciados_service import HistoriaIniciadosService
-from use_cases.empresas_externas_use_case import EmpresasExternasUseCase
-from use_cases.historia_iniciados_use_case import HistoriaIniciadosUseCase
+from use_cases.empresas.empresas_externas_use_case import EmpresasExternasUseCase
+from use_cases.historia_ot.historia_iniciados_use_case import HistoriaIniciadosUseCase
 
 toa_bp = Blueprint("toa", __name__, url_prefix="/toa")
 
