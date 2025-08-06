@@ -1,4 +1,5 @@
 from flask import Flask
+
 from src.config import Config
 from src.models import db, migrate
 
