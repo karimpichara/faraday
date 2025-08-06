@@ -7,8 +7,6 @@ from typing import Any, Dict
 
 from sqlalchemy import Boolean, DateTime
 
-from src.models import db
-
 
 class ToDictMixin:
     """Mixin class to add to_dict functionality to SQLAlchemy models."""
@@ -19,6 +17,10 @@ class ToDictMixin:
         if "_sa_instance_state" in row_to_dict:
             del row_to_dict["_sa_instance_state"]
         return row_to_dict
+
+
+# Import db after mixin definition to avoid circular imports
+from src.models import db  # noqa: E402
 
 
 class BaseModel(db.Model, ToDictMixin):

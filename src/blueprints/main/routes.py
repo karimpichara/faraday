@@ -1,5 +1,13 @@
-from flask import (Blueprint, flash, jsonify, redirect, render_template,
-                   request, session, url_for)
+from flask import (
+    Blueprint,
+    flash,
+    jsonify,
+    redirect,
+    render_template,
+    request,
+    session,
+    url_for,
+)
 
 main_bp = Blueprint("main", __name__)
 
@@ -19,16 +27,21 @@ def welcome():
 
 @main_bp.route("/login", methods=["GET", "POST"])
 def login():
-    """Login page - accepts any username/password."""
+    """Login page - real user authentication."""
     if request.method == "POST":
         username = request.form.get("username")
         password = request.form.get("password")
 
         if username and password:
-            # Fake authentication - any credentials work
-            session["username"] = username
-            flash("¡Inicio de sesión exitoso!", "success")
-            return redirect(url_for("main.welcome"))
+            # Use real authentication with the User model
+            from src.models.auth.user import User
+
+            if User.authenticate(username, password):
+                session["username"] = username
+                flash("¡Inicio de sesión exitoso!", "success")
+                return redirect(url_for("main.welcome"))
+            else:
+                flash("Usuario o contraseña incorrectos", "error")
         else:
             flash("Por favor introduce usuario y contraseña", "error")
 

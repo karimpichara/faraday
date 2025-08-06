@@ -1,0 +1,14 @@
+from sqlalchemy import String
+
+from src.models import db
+from src.models.base import BaseModel
+
+
+class Comentario(BaseModel):
+    __tablename__ = "comentarios"
+    comentario = db.Column(String(256), nullable=False)
+    id_orden_trabajo = db.Column(
+        db.Integer, db.ForeignKey("ordenes_trabajo.id"), nullable=False
+    )
+
+    orden_trabajo = db.relationship("OrdenTrabajo", backref="comentarios")
