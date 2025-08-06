@@ -1,4 +1,5 @@
 from typing import Any
+
 from src.models.empresas_externas_toa import EmpresasExternasToa
 
 

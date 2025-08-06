@@ -1,15 +1,16 @@
-import json
-import os
-from datetime import datetime
-
-
 from flask import Blueprint, jsonify, request
+
+from services.empresas_externas_service import EmpresasExternasService
 from src.services.historia_iniciados_service import HistoriaIniciadosService
-from src.services.empresasExternas_service import EmpresasExternasService
-from src.use_cases.historia_iniciados_useCase import HistoriaIniciadosUseCase
-from src.use_cases.empresas_externas_useCase import EmpresasExternasUseCase
+from use_cases.empresas_externas_usecase import EmpresasExternasUseCase
+from use_cases.historia_iniciados_usecase import HistoriaIniciadosUseCase
 
 toa_bp = Blueprint("toa", __name__, url_prefix="/toa")
+
+
+@toa_bp.route("/healthcheck")
+def healthcheck():
+    return jsonify({"status": "ok"})
 
 
 @toa_bp.route("/set_data_toa_historia_south_zone", methods=["POST"])

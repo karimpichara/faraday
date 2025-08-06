@@ -1,6 +1,6 @@
 import json
 from werkzeug.datastructures import FileStorage
-from src.services.empresasExternas_service import EmpresasExternasService
+from services.empresas_externas_service import EmpresasExternasService
 
 
 class EmpresasExternasUseCase:

@@ -1,14 +1,12 @@
-from flask import (
-    Blueprint,
-    flash,
-    redirect,
-    render_template,
-    request,
-    session,
-    url_for,
-)
+from flask import (Blueprint, flash, jsonify, redirect, render_template,
+                   request, session, url_for)
 
 main_bp = Blueprint("main", __name__)
+
+
+@main_bp.route("/healthcheck")
+def healthcheck():
+    return jsonify({"status": "ok"})
 
 
 @main_bp.route("/")
