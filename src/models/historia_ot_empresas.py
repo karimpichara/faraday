@@ -1,40 +1,42 @@
+from typing import Any
+
 from sqlalchemy import String
+
 from src.models import db
 from src.models.base import BaseModel
-from typing import Any
 
 
 class HistoriaOtEmpresas(BaseModel):
     __tablename__ = "historia_ot_empresas"
-    zona = db.Column(String(200), nullable=False)
-    orden_de_trabajo = db.Column(String(200), nullable=False)
-    empresa = db.Column(String(200), nullable=False)
-    tecnico = db.Column(String(200), nullable=False)
-    coord_x = db.Column(String(200), nullable=False)
-    coord_y = db.Column(String(200), nullable=False)
-    duracion = db.Column(String(200), nullable=False)
-    estado = db.Column(String(200), nullable=False)
-    fecha = db.Column(String(200), nullable=False)
-    flag_consulta_vecino = db.Column(String(200), nullable=False)
-    flag_estado_aprovision = db.Column(String(200), nullable=False)
-    flag_fallas_masivas = db.Column(String(200), nullable=False)
-    flag_materiales = db.Column(String(200), nullable=False)
-    flag_niveles = db.Column(String(200), nullable=False)
-    hora_flag_estado_aprovision = db.Column(String(200), nullable=False)
-    hora_flag_fallas_masivas = db.Column(String(200), nullable=False)
-    hora_flag_materiales = db.Column(String(200), nullable=False)
-    hora_flag_niveles = db.Column(String(200), nullable=False)
-    inicio = db.Column(String(200), nullable=False)
-    intervencion_neutra = db.Column(String(200), nullable=False)
+    zona = db.Column(String(64), nullable=False)
+    orden_de_trabajo = db.Column(String(64), nullable=False)
+    empresa = db.Column(String(128), nullable=False)
+    tecnico = db.Column(String(128), nullable=False)
+    coord_x = db.Column(String(32), nullable=False)
+    coord_y = db.Column(String(32), nullable=False)
+    duracion = db.Column(String(128), nullable=False)
+    estado = db.Column(String(128), nullable=False)
+    fecha = db.Column(String(128), nullable=False)
+    flag_consulta_vecino = db.Column(String(128), nullable=False)
+    flag_estado_aprovision = db.Column(String(128), nullable=False)
+    flag_fallas_masivas = db.Column(String(128), nullable=False)
+    flag_materiales = db.Column(String(128), nullable=False)
+    flag_niveles = db.Column(String(128), nullable=False)
+    hora_flag_estado_aprovision = db.Column(String(128), nullable=False)
+    hora_flag_fallas_masivas = db.Column(String(128), nullable=False)
+    hora_flag_materiales = db.Column(String(128), nullable=False)
+    hora_flag_niveles = db.Column(String(128), nullable=False)
+    inicio = db.Column(String(128), nullable=False)
+    intervencion_neutra = db.Column(String(128), nullable=False)
     notas_consulta_vecino = db.Column(String(8000), nullable=True)
     notas_consulta_vecino_ultimo = db.Column(String(8000), nullable=True)
-    qr_drop = db.Column(String(200), nullable=False)
-    rut_tecnico = db.Column(String(200), nullable=False)
-    tipo_red_producto = db.Column(String(200), nullable=False)
-    hora_ultima_vecino = db.Column(String(200), nullable=True)
-    hora_qr = db.Column(String(200), nullable=False)
-    tipo_actividad = db.Column(String(200), nullable=False)
-    zona_de_trabajo = db.Column(String(200), nullable=False)
+    qr_drop = db.Column(String(128), nullable=False)
+    rut_tecnico = db.Column(String(128), nullable=False)
+    tipo_red_producto = db.Column(String(128), nullable=False)
+    hora_ultima_vecino = db.Column(String(128), nullable=True)
+    hora_qr = db.Column(String(128), nullable=False)
+    tipo_actividad = db.Column(String(128), nullable=False)
+    zona_de_trabajo = db.Column(String(128), nullable=False)
 
     @classmethod
     def get_historia_iniciados_all(cls) -> list[dict[str, Any]]:
@@ -92,7 +94,7 @@ class HistoriaOtEmpresas(BaseModel):
     ) -> (
         None
     ):  # la zona puede sur norte, centro o metropolitana, las empresas son las que aparecen en el toa
-        print(f"comenzando a cargar a la bd")
+        print("comenzando a cargar a la bd")
         try:
             nuevo_usuario = cls(
                 zona=zona,
