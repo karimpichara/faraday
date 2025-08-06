@@ -1,4 +1,3 @@
-import json
 from typing import Any
 
 from src.services.empresas_externas_service import EmpresasExternasService
@@ -40,6 +39,10 @@ class HistoriaIniciadosUseCase:
             empresa_encontrada = None
 
             # Find the first matching empresa in the técnico field
+            # Handle None values gracefully
+            if tecnico is None:
+                tecnico = ""
+
             for empresa_nombre in empresa_nombres:
                 if empresa_nombre in tecnico:
                     empresa_encontrada = empresa_nombre

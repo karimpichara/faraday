@@ -1,5 +1,7 @@
 import json
+
 from werkzeug.datastructures import FileStorage
+
 from src.services.empresas_externas_service import EmpresasExternasService
 
 

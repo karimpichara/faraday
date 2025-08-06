@@ -1,5 +1,6 @@
 from flask import Flask
 
+from src.app.extensions import services
 from src.config import Config
 from src.models import db, migrate
 
@@ -16,6 +17,8 @@ def create_app():
     # Initialize extensions
     db.init_app(app)
     migrate.init_app(app, db)
+    services.init_app(app)
+
     # Register blueprints
     from src.blueprints.main import main_bp
     from src.blueprints.toa import toa_bp
