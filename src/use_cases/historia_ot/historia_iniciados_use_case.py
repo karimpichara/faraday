@@ -1,4 +1,5 @@
 from typing import Any
+import json
 
 from src.services.empresas_externas_service import EmpresasExternasService
 from src.services.historia_iniciados_service import HistoriaIniciadosService
@@ -31,13 +32,12 @@ class HistoriaIniciadosUseCase:
             self.empresas_externas_service.get_empresas_externas_toa_all()
         )
         empresa_nombres = [empresa.nombre_toa for empresa in empresas_externas]
-
         ot_no_ingresadas = []
-
+        data = json.loads(data)
+        print(f"data: {data}")
         for item in data:
             tecnico = item.get("Técnico", "")
             empresa_encontrada = None
-
             # Find the first matching empresa in the técnico field
             # Handle None values gracefully
             if tecnico is None:
@@ -54,7 +54,6 @@ class HistoriaIniciadosUseCase:
                 )
             else:
                 ot_no_ingresadas.append(item)
-
         return ot_no_ingresadas
 
     def set_data_zona_sur(self, data: list[dict[str, Any]]) -> list[dict[str, Any]]:
