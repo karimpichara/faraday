@@ -7,9 +7,6 @@ class HistoriaIniciadosService:
     def set_data_to_database(
         self, data: dict[str, Any], zona: str, empresa: str
     ) -> None:
-        print(f"data: {data}")
-        print(f"zona: {zona}")
-        print(f"empresa: {empresa}")
         HistoriaOtEmpresas.set_historia_iniciados(data, zona, empresa)
 
     def get_historia_iniciados(self) -> list[dict[str, Any]]:

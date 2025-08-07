@@ -33,8 +33,10 @@ class HistoriaIniciadosUseCase:
         )
         empresa_nombres = [empresa.nombre_toa for empresa in empresas_externas]
         ot_no_ingresadas = []
-        data = json.loads(data)
-        print(f"data: {data}")
+        try:
+            data = json.load(data)
+        except Exception as e:
+            raise Exception(f"Error al cargar el archivo: {e}")
         for item in data:
             tecnico = item.get("Técnico", "")
             empresa_encontrada = None
@@ -54,6 +56,10 @@ class HistoriaIniciadosUseCase:
                 )
             else:
                 ot_no_ingresadas.append(item)
+        ot_ingresadas = len(data) - len(ot_no_ingresadas)
+        cantidad_ot_rechazadas = len(ot_no_ingresadas)
+        print(f"ot ingresadas: {ot_ingresadas}")
+        print(f"ot rechazadas: {cantidad_ot_rechazadas}")
         return ot_no_ingresadas
 
     def set_data_zona_sur(self, data: list[dict[str, Any]]) -> list[dict[str, Any]]:

@@ -94,7 +94,6 @@ class HistoriaOtEmpresas(BaseModel):
     ) -> (
         None
     ):  # la zona puede sur norte, centro o metropolitana, las empresas son las que aparecen en el toa
-        print("comenzando a cargar a la bd")
         try:
             nuevo_usuario = cls(
                 zona=zona,
