@@ -10,5 +10,6 @@ class Comentario(BaseModel):
     id_orden_trabajo = db.Column(
         db.Integer, db.ForeignKey("ordenes_trabajo.id"), nullable=False
     )
+    id_usuario = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
 
     orden_trabajo = db.relationship("OrdenTrabajo", backref="comentarios")
