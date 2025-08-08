@@ -6,7 +6,7 @@ migrate = Migrate()
 
 # Import base models first to avoid circular imports
 from src.models._base import BaseModel  # noqa: E402,F401
-from src.models.auth.user import Role, User, UserRole  # noqa: E402,F401
+from src.models.auth.user import Role, User, UserEmpresa, UserRole  # noqa: E402,F401
 from src.models.comentarios import Comentario  # noqa: E402,F401
 
 # Import other models
@@ -24,5 +24,6 @@ __all__ = [
     "User",
     "Role",
     "UserRole",
+    "UserEmpresa",
     "Comentario",
 ]

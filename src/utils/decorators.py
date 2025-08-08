@@ -31,11 +31,11 @@ def require_token(expected_token: str = "1234567890"):
 
             # Check if token is provided
             if not token:
-                return jsonify({"error": "Token header is required"}), 401
+                return jsonify({"error": "Se requiere el header de token"}), 401
 
             # Validate token
             if token != expected_token:
-                return jsonify({"error": "Invalid authentication token"}), 401
+                return jsonify({"error": "Token de autenticación inválido"}), 401
 
             # Token is valid, proceed with the original function
             return f(*args, **kwargs)
@@ -61,12 +61,12 @@ def require_json():
         def decorated_function(*args, **kwargs):
             # Validate Content-Type
             if not request.is_json:
-                return jsonify({"error": "Content-Type must be application/json"}), 400
+                return jsonify({"error": "Content-Type debe ser application/json"}), 400
 
             # Validate JSON data exists
             json_data = request.get_json()
             if json_data is None:
-                return jsonify({"error": "Invalid or missing JSON data"}), 400
+                return jsonify({"error": "Datos JSON inválidos o faltantes"}), 400
 
             # JSON is valid, proceed with the original function
             return f(*args, **kwargs)
@@ -95,20 +95,20 @@ def require_token_and_json(expected_token: str = "1234567890"):
         def decorated_function(*args, **kwargs):
             # Validate Content-Type
             if not request.is_json:
-                return jsonify({"error": "Content-Type must be application/json"}), 400
+                return jsonify({"error": "Content-Type debe ser application/json"}), 400
 
             # Get and validate token from headers
             token = request.headers.get("Token")
             if not token:
-                return jsonify({"error": "Token header is required"}), 401
+                return jsonify({"error": "Se requiere el header de token"}), 401
 
             if token != expected_token:
-                return jsonify({"error": "Invalid authentication token"}), 401
+                return jsonify({"error": "Token de autenticación inválido"}), 401
 
             # Validate JSON data
             json_data = request.get_json()
             if json_data is None:
-                return jsonify({"error": "Invalid or missing JSON data"}), 400
+                return jsonify({"error": "Datos JSON inválidos o faltantes"}), 400
 
             # All validations passed, proceed with the original function
             return f(*args, **kwargs)

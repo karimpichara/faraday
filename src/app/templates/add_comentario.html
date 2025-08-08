@@ -1,0 +1,167 @@
+{% extends "_base.html" %}
+
+{% block title %}Agregar Comentario - Control de TOA{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="content-wrapper">
+        <div class="page-header">
+            <h1><span class="emoji">💬</span> Agregar Comentario</h1>
+            <p class="page-subtitle">Orden de Trabajo: <strong>{{ orden_trabajo.codigo }}</strong></p>
+        </div>
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="flash-messages">
+            {% for category, message in messages %}
+            <div class="flash-message flash-{{ category }}">
+                <span class="flash-text">{{ message }}</span>
+                <button class="flash-close" onclick="this.parentElement.style.display='none'"
+                    aria-label="Cerrar mensaje">
+                    ✕
+                </button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        <!-- Add Comment Form -->
+        {% if not error_state %}
+        <div class="form-container">
+            <div class="form-header">
+                <h2>Nuevo Comentario</h2>
+                <p>Completa los campos para agregar un comentario a esta orden de trabajo</p>
+            </div>
+
+            <form method="POST"
+                action="{{ url_for('toa.manage_comentarios', codigo_orden_trabajo=orden_trabajo.codigo) }}">
+                <div class="form-group">
+                    <label for="num_ticket" class="form-label">Número de Ticket:</label>
+                    <input type="text" id="num_ticket" name="num_ticket" class="form-input"
+                        placeholder="Ej: TKT-2024-001" required maxlength="32"
+                        value="{{ request.form.num_ticket if request.form.num_ticket }}">
+                    <small class="form-help">Introduce el número de ticket asociado</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="comentario" class="form-label">Comentario:</label>
+                    <textarea id="comentario" name="comentario" class="form-textarea"
+                        placeholder="Describe el trabajo realizado, observaciones o notas importantes..." rows="5"
+                        required maxlength="256">{{ request.form.comentario if request.form.comentario }}</textarea>
+                    <small class="form-help">Máximo 256 caracteres</small>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">
+                        💾 Guardar Comentario
+                    </button>
+                    <a href="{{ url_for('main.welcome') }}" class="btn btn-secondary">
+                        ↩️ Volver
+                    </a>
+                </div>
+            </form>
+        </div>
+        {% else %}
+        <!-- Error State - Show helpful message instead of form -->
+        <div class="form-container">
+            <div class="error-state-content">
+                <div class="error-icon">❌</div>
+                <h2>No se puede cargar la página</h2>
+                <p>La orden de trabajo especificada no existe o no tienes acceso a ella.</p>
+                <div class="form-actions">
+                    <a href="{{ url_for('main.welcome') }}" class="btn btn-primary">
+                        ↩️ Volver al Inicio
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Comments Count - Only show if not in error state -->
+        {% if not error_state %}
+        <div class="comments-section">
+            <div class="section-header">
+                <h3>📝 Comentarios Existentes</h3>
+                <span class="badge">{{ comentarios_count }} comentario(s)</span>
+            </div>
+
+            {% if comentarios_count > 0 %}
+            <div class="comments-summary">
+                <div class="summary-card">
+                    <div class="summary-icon">💬</div>
+                    <div class="summary-content">
+                        <h4>Total de Comentarios</h4>
+                        <p class="summary-count">{{ comentarios_count }}</p>
+                        <small class="summary-description">
+                            {% if comentarios_count == 1 %}
+                            Hay 1 comentario registrado para esta orden de trabajo.
+                            {% else %}
+                            Hay {{ comentarios_count }} comentarios registrados para esta orden de trabajo.
+                            {% endif %}
+                        </small>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <div class="empty-icon">📭</div>
+                <h3>No hay comentarios</h3>
+                <p>Sé el primero en agregar un comentario a esta orden de trabajo.</p>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Auto-focus first field
+    document.addEventListener('DOMContentLoaded', function () {
+        const firstField = document.getElementById('num_ticket');
+        if (firstField) {
+            firstField.focus();
+        }
+    });
+
+    // Character counter for textarea
+    const textarea = document.getElementById('comentario');
+    const maxLength = 256;
+
+    if (textarea) {
+        // Create character counter element
+        const counter = document.createElement('div');
+        counter.className = 'char-counter';
+        textarea.parentNode.appendChild(counter);
+
+        function updateCounter() {
+            const remaining = maxLength - textarea.value.length;
+            counter.textContent = `${textarea.value.length}/${maxLength} caracteres`;
+            counter.style.color = remaining < 20 ? '#e74c3c' : '#666';
+        }
+
+        textarea.addEventListener('input', updateCounter);
+        updateCounter();
+    }
+
+    // Form validation
+    document.querySelector('form').addEventListener('submit', function (e) {
+        const numTicket = document.getElementById('num_ticket').value.trim();
+        const comentario = document.getElementById('comentario').value.trim();
+
+        if (!numTicket || !comentario) {
+            e.preventDefault();
+            alert('Por favor completa todos los campos');
+            return;
+        }
+
+        if (comentario.length > 256) {
+            e.preventDefault();
+            alert('El comentario no puede exceder los 256 caracteres');
+        }
+    });
+</script>
+{% endblock %}

@@ -1,8 +1,10 @@
 from flask import Flask
 
+from src.services.comentarios_service import ComentariosService
 from src.services.empresas_externas_service import EmpresasExternasService
 from src.services.historia_iniciados_service import HistoriaIniciadosService
 from src.services.orden_trabajo_service import OrdenTrabajoService
+from src.use_cases.comentarios.comentarios_use_case import ComentariosUseCase
 from src.use_cases.empresas.empresas_externas_use_case import EmpresasExternasUseCase
 from src.use_cases.historia_ot.historia_iniciados_use_case import (
     HistoriaIniciadosUseCase,
@@ -17,9 +19,11 @@ class Services:
         self.historia_iniciados: HistoriaIniciadosService | None = None
         self.empresas_externas: EmpresasExternasService | None = None
         self.orden_trabajo: OrdenTrabajoService | None = None
+        self.comentarios: ComentariosService | None = None
         self.historia_iniciados_use_case: HistoriaIniciadosUseCase | None = None
         self.empresas_externas_use_case: EmpresasExternasUseCase | None = None
         self.orden_trabajo_use_case: OrdenTrabajoUseCase | None = None
+        self.comentarios_use_case: ComentariosUseCase | None = None
         self._initialized = False
 
         if app is not None:
@@ -37,6 +41,7 @@ class Services:
         self.historia_iniciados = HistoriaIniciadosService()
         self.empresas_externas = EmpresasExternasService()
         self.orden_trabajo = OrdenTrabajoService()
+        self.comentarios = ComentariosService()
 
         # Initialize use cases with dependencies
         self.historia_iniciados_use_case = HistoriaIniciadosUseCase(
@@ -47,6 +52,9 @@ class Services:
         )
         self.orden_trabajo_use_case = OrdenTrabajoUseCase(
             self.orden_trabajo, self.empresas_externas
+        )
+        self.comentarios_use_case = ComentariosUseCase(
+            self.comentarios, self.orden_trabajo
         )
 
         app.extensions["services"] = self

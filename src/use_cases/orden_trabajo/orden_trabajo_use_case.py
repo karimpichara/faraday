@@ -48,10 +48,10 @@ class OrdenTrabajoUseCase:
 
         # Validate input data structure
         if not isinstance(ordenes_data, list):
-            raise ValueError("Input data must be a list")
+            raise ValueError("Los datos de entrada deben ser una lista")
 
         if not ordenes_data:
-            raise ValueError("Input data cannot be empty")
+            raise ValueError("Los datos de entrada no pueden estar vacíos")
 
         # Validate each orden data
         validated_ordenes = []
@@ -59,12 +59,12 @@ class OrdenTrabajoUseCase:
 
         for i, orden_data in enumerate(ordenes_data):
             if not isinstance(orden_data, dict):
-                errors.append(f"Item {i}: Must be a dictionary")
+                errors.append(f"Elemento {i}: Debe ser un diccionario")
                 continue
 
             if "id_empresa" not in orden_data or "codigo" not in orden_data:
                 errors.append(
-                    f"Item {i}: Must contain 'id_empresa' and 'codigo' fields"
+                    f"Elemento {i}: Debe contener los campos 'id_empresa' y 'codigo'"
                 )
                 continue
 
@@ -72,16 +72,16 @@ class OrdenTrabajoUseCase:
                 id_empresa = int(orden_data["id_empresa"])
                 codigo = str(orden_data["codigo"]).strip()
             except (ValueError, TypeError):
-                errors.append(f"Item {i}: Invalid data types")
+                errors.append(f"Elemento {i}: Tipos de datos inválidos")
                 continue
 
             if not codigo:
-                errors.append(f"Item {i}: 'codigo' cannot be empty")
+                errors.append(f"Elemento {i}: El 'codigo' no puede estar vacío")
                 continue
 
             # Validate empresa exists
             if not self.validate_empresa_exists(id_empresa):
-                errors.append(f"Item {i}: Empresa with id {id_empresa} does not exist")
+                errors.append(f"Elemento {i}: La empresa con id {id_empresa} no existe")
                 continue
 
             # Check if orden already exists
@@ -89,33 +89,46 @@ class OrdenTrabajoUseCase:
                 codigo
             )
             if existing_orden:
-                errors.append(f"Item {i}: Orden with codigo '{codigo}' already exists")
+                errors.append(f"Elemento {i}: La orden con código '{codigo}' ya existe")
                 continue
 
             validated_ordenes.append({"id_empresa": id_empresa, "codigo": codigo})
 
         # If there are validation errors, raise exception
         if errors:
-            raise ValueError(f"Validation errors: {'; '.join(errors)}")
+            raise ValueError(f"Errores de validación: {'; '.join(errors)}")
 
-        # Create ordenes de trabajo in bulk
+        # Create ordenes de trabajo in bulk (with conflict handling)
         try:
-            created_ordenes = self.orden_trabajo_service.create_ordenes_trabajo_bulk(
+            result = self.orden_trabajo_service.create_ordenes_trabajo_bulk(
                 validated_ordenes
             )
 
+            # Prepare response message
+            message_parts = []
+            if result["inserted_count"] > 0:
+                message_parts.append(
+                    f"Se insertaron {result['inserted_count']} órdenes nuevas"
+                )
+            if result["skipped_count"] > 0:
+                message_parts.append(
+                    f"Se omitieron {result['skipped_count']} órdenes existentes"
+                )
+
+            message = (
+                ". ".join(message_parts)
+                if message_parts
+                else "No se procesaron órdenes"
+            )
+
             return {
-                "message": "Ordenes de trabajo created successfully",
-                "created_count": len(created_ordenes),
-                "ordenes": [
-                    {
-                        "id": orden.id,
-                        "codigo": orden.codigo,
-                        "id_empresa": orden.id_empresa,
-                        "created_at": orden.created_at.isoformat(),
-                    }
-                    for orden in created_ordenes
-                ],
+                "success": True,
+                "message": message,
+                "inserted_count": result["inserted_count"],
+                "skipped_count": result["skipped_count"],
+                "total_processed": result["total_count"],
+                "validation_errors": errors if errors else None,
             }
+
         except Exception as e:
-            raise RuntimeError(f"Error creating ordenes de trabajo: {str(e)}")
+            raise RuntimeError(f"Error de base de datos: {str(e)}") from e

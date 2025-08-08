@@ -12,6 +12,12 @@ class User(UserMixin, BaseModel):
     roles = db.relationship(
         "Role", secondary="user_roles", backref=db.backref("users"), lazy="subquery"
     )
+    empresas = db.relationship(
+        "EmpresasExternasToa",
+        secondary="user_empresas",
+        backref=db.backref("users"),
+        lazy="subquery",
+    )
 
     def __init__(
         self,
@@ -54,3 +60,15 @@ class UserRole(BaseModel):
     role_id = db.Column(db.Integer(), db.ForeignKey("roles.id", ondelete="CASCADE"))
 
     __table_args__ = (UniqueConstraint("user_id", "role_id", name="uq_user_role"),)
+
+
+class UserEmpresa(BaseModel):
+    __tablename__ = "user_empresas"
+    user_id = db.Column(db.Integer(), db.ForeignKey("users.id", ondelete="CASCADE"))
+    empresa_id = db.Column(
+        db.Integer(), db.ForeignKey("empresas_externas_toa.id", ondelete="CASCADE")
+    )
+
+    __table_args__ = (
+        UniqueConstraint("user_id", "empresa_id", name="uq_user_empresa"),
+    )
