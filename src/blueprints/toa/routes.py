@@ -128,3 +128,18 @@ def set_empresas_externas_toa():
         return jsonify({"message": "File uploaded successfully"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+@toa_bp.route("/get_empresas_externas", methods=["GET"])
+def get_empresas_externas_toa():
+    """
+    Get all EmpresasExternasToa records.
+
+    Returns:
+        JSON list of companies with nombre, nombre_toa, and rut fields
+    """
+    try:
+        result = services.empresas_externas_use_case.get_empresas_externas_toa_all()
+        return jsonify(result), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500

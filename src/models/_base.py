@@ -3,7 +3,7 @@
 
 import uuid
 from datetime import datetime, timezone
-from typing import Any, Dict
+from typing import Any
 
 from sqlalchemy import Boolean, DateTime
 
@@ -11,7 +11,7 @@ from sqlalchemy import Boolean, DateTime
 class ToDictMixin:
     """Mixin class to add to_dict functionality to SQLAlchemy models."""
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert SQLAlchemy model instance to dictionary."""
         row_to_dict = self.__dict__.copy()
         if "_sa_instance_state" in row_to_dict:

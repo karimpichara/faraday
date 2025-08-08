@@ -34,18 +34,13 @@ class User(UserMixin, BaseModel):
     @classmethod
     def authenticate(cls, username, password) -> bool:
         user = cls.get_by_username(username)
-        if user and user.verify_password(password):
-            return True
-        return False
+        return bool(user and user.verify_password(password))
 
     def __repr__(self):
         return f"<User {self.username}>"
 
     def has_roles(self, role_list: list) -> bool:
-        for role in role_list:
-            if role in list(map(lambda x: x.name, self.roles)):
-                return True
-        return False
+        return any(role in [x.name for x in self.roles] for role in role_list)
 
 
 class Role(BaseModel):

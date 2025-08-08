@@ -1,7 +1,7 @@
 from sqlalchemy import String
 
 from src.models import db
-from src.models.base import BaseModel
+from src.models._base import BaseModel
 
 
 class Comentario(BaseModel):
