@@ -37,6 +37,8 @@ class HistoriaOtEmpresas(BaseModel):
     hora_qr = db.Column(String(128), nullable=False)
     tipo_actividad = db.Column(String(128), nullable=False)
     zona_de_trabajo = db.Column(String(128), nullable=False)
+    pasos = db.Column(String(8000), nullable=True)
+    pelo = db.Column(String(128), nullable=True)
 
     @classmethod
     def get_historia_iniciados_all(cls) -> list[dict[str, Any]]:
@@ -95,6 +97,7 @@ class HistoriaOtEmpresas(BaseModel):
         None
     ):  # la zona puede sur norte, centro o metropolitana, las empresas son las que aparecen en el toa
         try:
+            print(f"pasos: {data['Pasos']}")
             nuevo_usuario = cls(
                 zona=zona,
                 empresa=empresa,
@@ -125,6 +128,8 @@ class HistoriaOtEmpresas(BaseModel):
                 hora_qr=data["hora_QR"],
                 tipo_actividad=data["tipo_actividad"],
                 zona_de_trabajo=data["Zona de trabajo"],
+                pasos=data["Pasos"],
+                pelo=data["Pelo"],
             )
             db.session.add(nuevo_usuario)
             db.session.commit()
