@@ -39,6 +39,12 @@ def login():
             if User.authenticate(username, password):
                 session["username"] = username
                 flash("¡Inicio de sesión exitoso!", "success")
+
+                # Redirect to next page if provided, otherwise to welcome
+                # Check both form data and URL args for next parameter
+                next_page = request.form.get("next") or request.args.get("next")
+                if next_page:
+                    return redirect(next_page)
                 return redirect(url_for("main.welcome"))
             else:
                 flash("Usuario o contraseña incorrectos", "error")

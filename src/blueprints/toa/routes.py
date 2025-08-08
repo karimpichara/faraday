@@ -1,9 +1,22 @@
-from flask import Blueprint, jsonify, request
+from flask import (
+    Blueprint,
+    jsonify,
+    request,
+    flash,
+    redirect,
+    render_template,
+    session,
+    url_for,
+)
 
 from src.app.extensions import services
 from src.utils.decorators import require_token_and_json
+from src.models.auth.user import User
 
 toa_bp = Blueprint("toa", __name__, url_prefix="/toa")
+
+# Constants
+MAIN_WELCOME_ROUTE = "main.welcome"
 
 
 @toa_bp.route("/healthcheck")
@@ -14,14 +27,14 @@ def healthcheck():
 def _validate_file_upload():
     """Common validation logic for file uploads"""
     if "file" not in request.files:
-        return jsonify({"error": "No file provided"}), 400
+        return jsonify({"error": "No se proporcionó archivo"}), 400
 
     file = request.files["file"]
     if file.filename == "":
-        return jsonify({"error": "No selected file"}), 400
+        return jsonify({"error": "No se seleccionó archivo"}), 400
 
     if not file.filename.endswith(".json"):
-        return jsonify({"error": "File must be a JSON file"}), 400
+        return jsonify({"error": "El archivo debe ser un archivo JSON"}), 400
 
     return file, None
 
@@ -80,7 +93,7 @@ def set_data_toa_historia_zone(zone):
         return (
             jsonify(
                 {
-                    "error": f"Invalid zone '{zone}'. Valid zones are: {', '.join(valid_zones)}"
+                    "error": f"Zona inválida '{zone}'. Las zonas válidas son: {', '.join(valid_zones)}"
                 }
             ),
             400,
@@ -181,4 +194,95 @@ def add_ordenes_trabajo():
         return jsonify({"error": str(e)}), 500
     except Exception as e:
         # Unexpected errors
-        return jsonify({"error": f"Unexpected error: {str(e)}"}), 500
+        return jsonify({"error": f"Error inesperado: {str(e)}"}), 500
+
+
+@toa_bp.route("/comentarios/<codigo_orden_trabajo>", methods=["GET", "POST"])
+def manage_comentarios(codigo_orden_trabajo):
+    """
+    Manage comentarios for a specific orden de trabajo.
+
+    GET: Returns HTML page with form and existing comments (web UI)
+    POST: Adds a new comment and redirects (web form submission)
+
+    Authentication: Session-based (for web UI)
+    """
+
+    # Check authentication
+    if "username" not in session:
+        return redirect(url_for("main.login", next=request.url))
+
+    # Get current user
+    user = User.get_by_username(session["username"])
+    if not user:
+        session.pop("username", None)
+        flash("Usuario no encontrado", "error")
+        return redirect(url_for("main.login"))
+
+    try:
+        if request.method == "POST":
+            # Handle form submission
+            comentario_data = {
+                "comentario": request.form.get("comentario", ""),
+                "num_ticket": request.form.get("num_ticket", ""),
+            }
+
+            # Add comment through use case
+            services.comentarios_use_case.add_comentario(
+                user=user,
+                codigo_orden_trabajo=codigo_orden_trabajo,
+                comentario_data=comentario_data,
+            )
+
+            flash("Comentario agregado exitosamente", "success")
+            return redirect(
+                url_for(
+                    "toa.manage_comentarios", codigo_orden_trabajo=codigo_orden_trabajo
+                )
+            )
+
+        else:
+            # GET: Show form and comments count (optimized - only get count)
+            data = services.comentarios_use_case.get_comentarios_count_for_orden(
+                user=user,
+                codigo_orden_trabajo=codigo_orden_trabajo,
+            )
+
+            # Convert data for template
+            orden_trabajo = type("OrdenTrabajo", (), data["orden_trabajo"])
+
+            return render_template(
+                "add_comentario.html",
+                username=session["username"],
+                orden_trabajo=orden_trabajo,
+                comentarios_count=data["comentarios_count"],
+            )
+
+    except ValueError as e:
+        # Validation errors (user doesn't have access, orden not found, etc.)
+        flash(str(e), "error")
+
+        # For orden not found or access denied errors, create a minimal context to show the error page
+        if "no encontrada o el usuario no tiene acceso" in str(e):
+            return render_template(
+                "add_comentario.html",
+                username=session["username"],
+                orden_trabajo=type(
+                    "OrdenTrabajo", (), {"codigo": codigo_orden_trabajo}
+                ),
+                comentarios_count=0,
+                error_state=True,
+            )
+        else:
+            # For access denied errors, redirect to welcome
+            return redirect(url_for(MAIN_WELCOME_ROUTE))
+
+    except RuntimeError:
+        # Database or system errors
+        flash("Error del sistema. Inténtelo de nuevo.", "error")
+        return redirect(url_for(MAIN_WELCOME_ROUTE))
+
+    except Exception:
+        # Unexpected errors
+        flash("Error inesperado. Inténtelo de nuevo.", "error")
+        return redirect(url_for(MAIN_WELCOME_ROUTE))

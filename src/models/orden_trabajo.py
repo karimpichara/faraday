@@ -6,7 +6,7 @@ from src.models._base import BaseModel
 
 class OrdenTrabajo(BaseModel):
     __tablename__ = "ordenes_trabajo"
-    codigo = db.Column(String(32), nullable=False)
+    codigo = db.Column(String(32), nullable=False, unique=True)
     id_empresa = db.Column(
         db.Integer, db.ForeignKey("empresas_externas_toa.id"), nullable=False
     )

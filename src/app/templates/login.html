@@ -21,7 +21,11 @@
             <div class="flash-messages">
                 {% for category, message in messages %}
                 <div class="flash-message flash-{{ category }}">
-                    {{ message }}
+                    <span class="flash-text">{{ message }}</span>
+                    <button class="flash-close" onclick="this.parentElement.style.display='none'"
+                        aria-label="Cerrar mensaje">
+                        ✕
+                    </button>
                 </div>
                 {% endfor %}
             </div>
@@ -29,6 +33,11 @@
             {% endwith %}
 
             <form method="POST" action="{{ url_for('main.login') }}">
+                <!-- Preserve next parameter for redirect after login -->
+                {% if request.args.get('next') %}
+                <input type="hidden" name="next" value="{{ request.args.get('next') }}">
+                {% endif %}
+
                 <div class="form-group">
                     <label for="username" class="form-label">Usuario:</label>
                     <input type="text" id="username" name="username" class="form-input"
