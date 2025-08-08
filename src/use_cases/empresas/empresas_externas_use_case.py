@@ -25,6 +25,7 @@ class EmpresasExternasUseCase:
             for empresa in empresas:
                 result.append(
                     {
+                        "id": empresa.id,
                         "nombre": empresa.nombre,
                         "nombre_toa": empresa.nombre_toa,
                         "rut": empresa.rut,
