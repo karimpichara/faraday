@@ -55,54 +55,49 @@ class OrdenTrabajoUseCase:
 
         # Validate each orden data
         validated_ordenes = []
-        errors = []
+        validation_errors = []
 
         for i, orden_data in enumerate(ordenes_data):
             if not isinstance(orden_data, dict):
-                errors.append(f"Elemento {i}: Debe ser un diccionario")
+                validation_errors.append(f"item-{i}")
                 continue
 
             if "id_empresa" not in orden_data or "codigo" not in orden_data:
-                errors.append(
-                    f"Elemento {i}: Debe contener los campos 'id_empresa' y 'codigo'"
-                )
+                validation_errors.append(f"item-{i}")
                 continue
 
             try:
                 id_empresa = int(orden_data["id_empresa"])
                 codigo = str(orden_data["codigo"]).strip()
             except (ValueError, TypeError):
-                errors.append(f"Elemento {i}: Tipos de datos inválidos")
+                validation_errors.append(f"item-{i}")
                 continue
 
             if not codigo:
-                errors.append(f"Elemento {i}: El 'codigo' no puede estar vacío")
+                validation_errors.append(f"item-{i}")
+                continue
+
+            if len(codigo) > 32:
+                validation_errors.append(codigo)
                 continue
 
             # Validate empresa exists
             if not self.validate_empresa_exists(id_empresa):
-                errors.append(f"Elemento {i}: La empresa con id {id_empresa} no existe")
+                validation_errors.append(codigo)
                 continue
 
-            # Check if orden already exists
-            existing_orden = self.orden_trabajo_service.get_orden_trabajo_by_codigo(
-                codigo
-            )
-            if existing_orden:
-                errors.append(f"Elemento {i}: La orden con código '{codigo}' ya existe")
-                continue
-
+            # Note: We don't check for existing ordenes here anymore -
+            # the service layer will handle that and report them as "not_inserted"
             validated_ordenes.append({"id_empresa": id_empresa, "codigo": codigo})
 
-        # If there are validation errors, raise exception
-        if errors:
-            raise ValueError(f"Errores de validación: {'; '.join(errors)}")
-
-        # Create ordenes de trabajo in bulk (with conflict handling)
+        # Create ordenes de trabajo with detailed tracking
         try:
             result = self.orden_trabajo_service.create_ordenes_trabajo_bulk(
                 validated_ordenes
             )
+
+            # Combine validation errors with database errors
+            all_errors = validation_errors + result["errors"]
 
             # Prepare response message
             message_parts = []
@@ -114,6 +109,10 @@ class OrdenTrabajoUseCase:
                 message_parts.append(
                     f"Se omitieron {result['skipped_count']} órdenes existentes"
                 )
+            if len(all_errors) > 0:
+                message_parts.append(
+                    f"Se encontraron {len(all_errors)} errores"
+                )
 
             message = (
                 ". ".join(message_parts)
@@ -124,10 +123,9 @@ class OrdenTrabajoUseCase:
             return {
                 "success": True,
                 "message": message,
-                "inserted_count": result["inserted_count"],
-                "skipped_count": result["skipped_count"],
-                "total_processed": result["total_count"],
-                "validation_errors": errors if errors else None,
+                "inserted": result["inserted"],
+                "not_inserted": result["not_inserted"],
+                "errors": all_errors,
             }
 
         except Exception as e:
