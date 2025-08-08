@@ -1,22 +1,46 @@
 from flask import (
     Blueprint,
-    jsonify,
-    request,
     flash,
+    jsonify,
     redirect,
     render_template,
-    session,
+    request,
     url_for,
 )
+from flask_login import current_user, login_required
 
 from src.app.extensions import services
 from src.utils.decorators import require_token_and_json
-from src.models.auth.user import User
 
 toa_bp = Blueprint("toa", __name__, url_prefix="/toa")
 
-# Constants
+# Route Constants
 MAIN_WELCOME_ROUTE = "main.welcome"
+MAIN_LOGIN_ROUTE = "main.login"
+TOA_MANAGE_TECNICOS_ROUTE = "toa.manage_tecnicos"
+TOA_LIST_TECNICOS_ROUTE = "toa.list_tecnicos"
+TOA_MANAGE_COMENTARIOS_ROUTE = "toa.manage_comentarios"
+
+
+def _handle_route_error(e, error_route=MAIN_WELCOME_ROUTE, route_name="route"):
+    """
+    Common error handling for routes.
+ 
+    Args:
+        e: Exception object
+        error_route: Route to redirect to on error
+        route_name: Name of the route for logging
+    """
+    if isinstance(e, ValueError):
+        flash(str(e), "error")
+        return redirect(url_for(error_route))
+    elif isinstance(e, RuntimeError):
+        flash("Error del sistema. Inténtelo de nuevo.", "error")
+        return redirect(url_for(error_route))
+    else:
+        print(f"Unexpected error in {route_name}: {str(e)}")
+        flash("Error inesperado. Inténtelo de nuevo.", "error")
+        return redirect(url_for(error_route))
 
 
 @toa_bp.route("/healthcheck")
@@ -198,6 +222,7 @@ def add_ordenes_trabajo():
 
 
 @toa_bp.route("/comentarios/<codigo_orden_trabajo>", methods=["GET", "POST"])
+@login_required
 def manage_comentarios(codigo_orden_trabajo):
     """
     Manage comentarios for a specific orden de trabajo.
@@ -205,19 +230,8 @@ def manage_comentarios(codigo_orden_trabajo):
     GET: Returns HTML page with form and existing comments (web UI)
     POST: Adds a new comment and redirects (web form submission)
 
-    Authentication: Session-based (for web UI)
+    Authentication: Flask-Login @login_required decorator
     """
-
-    # Check authentication
-    if "username" not in session:
-        return redirect(url_for("main.login", next=request.url))
-
-    # Get current user
-    user = User.get_by_username(session["username"])
-    if not user:
-        session.pop("username", None)
-        flash("Usuario no encontrado", "error")
-        return redirect(url_for("main.login"))
 
     try:
         if request.method == "POST":
@@ -229,7 +243,7 @@ def manage_comentarios(codigo_orden_trabajo):
 
             # Add comment through use case
             services.comentarios_use_case.add_comentario(
-                user=user,
+                user=current_user,
                 codigo_orden_trabajo=codigo_orden_trabajo,
                 comentario_data=comentario_data,
             )
@@ -237,14 +251,15 @@ def manage_comentarios(codigo_orden_trabajo):
             flash("Comentario agregado exitosamente", "success")
             return redirect(
                 url_for(
-                    "toa.manage_comentarios", codigo_orden_trabajo=codigo_orden_trabajo
+                    TOA_MANAGE_COMENTARIOS_ROUTE,
+                    codigo_orden_trabajo=codigo_orden_trabajo,
                 )
             )
 
         else:
             # GET: Show form and comments count (optimized - only get count)
             data = services.comentarios_use_case.get_comentarios_count_for_orden(
-                user=user,
+                user=current_user,
                 codigo_orden_trabajo=codigo_orden_trabajo,
             )
 
@@ -253,36 +268,115 @@ def manage_comentarios(codigo_orden_trabajo):
 
             return render_template(
                 "add_comentario.html",
-                username=session["username"],
+                username=current_user.username,
                 orden_trabajo=orden_trabajo,
                 comentarios_count=data["comentarios_count"],
             )
 
     except ValueError as e:
-        # Validation errors (user doesn't have access, orden not found, etc.)
-        flash(str(e), "error")
-
-        # For orden not found or access denied errors, create a minimal context to show the error page
+        # Special handling for orden not found/access denied errors
         if "no encontrada o el usuario no tiene acceso" in str(e):
+            flash(str(e), "error")
             return render_template(
                 "add_comentario.html",
-                username=session["username"],
+                username=current_user.username,
                 orden_trabajo=type(
                     "OrdenTrabajo", (), {"codigo": codigo_orden_trabajo}
                 ),
                 comentarios_count=0,
                 error_state=True,
             )
+        # For other ValueError, use common error handling
+        return _handle_route_error(e, MAIN_WELCOME_ROUTE, "manage_comentarios")
+
+    except Exception as e:
+        return _handle_route_error(e, MAIN_WELCOME_ROUTE, "manage_comentarios")
+
+
+@toa_bp.route("/tecnicos", methods=["GET", "POST"])
+@login_required
+def manage_tecnicos():
+    """Route for managing técnicos and supervisores."""
+
+    try:
+        if request.method == "POST":
+            # Get form data - expect multiple tecnicos
+            tecnicos_data = []
+
+            # Parse form data to get multiple tecnicos
+            form_data = request.form.to_dict(flat=False)
+
+            # Count how many tecnicos were submitted
+            max_index = 0
+            for key in form_data.keys():
+                if key.startswith("nombre_tecnico_"):
+                    index = int(key.split("_")[-1])
+                    max_index = max(max_index, index)
+
+            # Collect data for each tecnico
+            for i in range(max_index + 1):
+                nombre_tecnico = request.form.get(f"nombre_tecnico_{i}", "").strip()
+                rut_tecnico = request.form.get(f"rut_tecnico_{i}", "").strip()
+
+                # Only include if both fields have data
+                if nombre_tecnico and rut_tecnico:
+                    nombre_supervisor = request.form.get(
+                        "nombre_supervisor", ""
+                    ).strip()
+
+                    tecnicos_data.append(
+                        {
+                            "nombre_tecnico": nombre_tecnico,
+                            "rut_tecnico": rut_tecnico,
+                            "nombre_supervisor": nombre_supervisor,
+                        }
+                    )
+
+            if not tecnicos_data:
+                flash("Debe agregar al menos un técnico.", "error")
+                return redirect(url_for(TOA_MANAGE_TECNICOS_ROUTE))
+
+            # Add tecnicos using the use case
+            result = services.tecnico_supervisor_use_case.add_tecnicos_supervisores(
+                user=current_user,
+                tecnicos_data=tecnicos_data,
+            )
+
+            flash(result["message"], "success")
+            return redirect(url_for(TOA_MANAGE_TECNICOS_ROUTE))
+
         else:
-            # For access denied errors, redirect to welcome
-            return redirect(url_for(MAIN_WELCOME_ROUTE))
+            # GET request - show form only
+            data = services.tecnico_supervisor_use_case.get_tecnicos_for_user_empresa(
+                user=current_user
+            )
 
-    except RuntimeError:
-        # Database or system errors
-        flash("Error del sistema. Inténtelo de nuevo.", "error")
-        return redirect(url_for(MAIN_WELCOME_ROUTE))
+            return render_template(
+                "manage_tecnicos.html",
+                username=current_user.username,
+                empresa_nombre=data["empresa_nombre"],
+            )
 
-    except Exception:
-        # Unexpected errors
-        flash("Error inesperado. Inténtelo de nuevo.", "error")
-        return redirect(url_for(MAIN_WELCOME_ROUTE))
+    except Exception as e:
+        return _handle_route_error(e, TOA_MANAGE_TECNICOS_ROUTE, "manage_tecnicos")
+
+
+@toa_bp.route("/tecnicos/lista", methods=["GET"])
+@login_required
+def list_tecnicos():
+    """Route for viewing the list of técnicos for the user's empresa."""
+    try:
+        # Get tecnicos data for the user's empresa
+        data = services.tecnico_supervisor_use_case.get_tecnicos_for_user_empresa(
+            user=current_user
+        )
+
+        return render_template(
+            "list_tecnicos.html",
+            username=current_user.username,
+            empresa_nombre=data["empresa_nombre"],
+            tecnicos=data["tecnicos"],
+        )
+
+    except Exception as e:
+        return _handle_route_error(e, MAIN_WELCOME_ROUTE, "list_tecnicos")

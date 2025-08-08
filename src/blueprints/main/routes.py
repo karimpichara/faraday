@@ -5,9 +5,9 @@ from flask import (
     redirect,
     render_template,
     request,
-    session,
     url_for,
 )
+from flask_login import current_user, login_user, logout_user
 
 main_bp = Blueprint("main", __name__)
 
@@ -20,9 +20,9 @@ def healthcheck():
 @main_bp.route("/")
 def welcome():
     """Welcome page route."""
-    if "username" not in session:
+    if not current_user.is_authenticated:
         return redirect(url_for("main.login"))
-    return render_template("welcome.html", username=session["username"])
+    return render_template("welcome.html", username=current_user.username)
 
 
 @main_bp.route("/login", methods=["GET", "POST"])
@@ -36,8 +36,9 @@ def login():
             # Use real authentication with the User model
             from src.models.auth.user import User
 
-            if User.authenticate(username, password):
-                session["username"] = username
+            user = User.get_by_username(username)
+            if user and user.verify_password(password):
+                login_user(user)
                 flash("¡Inicio de sesión exitoso!", "success")
 
                 # Redirect to next page if provided, otherwise to welcome
@@ -57,6 +58,6 @@ def login():
 @main_bp.route("/logout")
 def logout():
     """Logout route."""
-    session.pop("username", None)
+    logout_user()
     flash("Has cerrado sesión", "info")
     return redirect(url_for("main.login"))
