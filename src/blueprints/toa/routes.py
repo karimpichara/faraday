@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify, request
 
 from src.app.extensions import services
+from src.utils.decorators import require_token_and_json
 
 toa_bp = Blueprint("toa", __name__, url_prefix="/toa")
 
@@ -143,3 +144,41 @@ def get_empresas_externas_toa():
         return jsonify(result), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+@toa_bp.route("/add_ordenes_trabajo", methods=["POST"])
+@require_token_and_json()
+def add_ordenes_trabajo():
+    """
+    Add multiple ordenes de trabajo to the database.
+
+    Expected JSON format:
+    [
+        {"id_empresa": 5, "codigo": "1-abc123"},
+        {"id_empresa": 6, "codigo": "3-abc128"}
+    ]
+
+    Headers:
+        Token: Authentication token (default: "1234567890")
+        Content-Type: application/json
+
+    Returns:
+        JSON response with operation results
+    """
+    try:
+        # Get JSON data (guaranteed to exist due to decorator)
+        ordenes_data = request.get_json()
+
+        # Process the request through use case (no token needed, already validated)
+        result = services.orden_trabajo_use_case.add_ordenes_trabajo(ordenes_data)
+        return jsonify(result), 201
+
+    except ValueError as e:
+        # Validation errors (data format, business rules, etc.)
+        return jsonify({"error": str(e)}), 400
+    except RuntimeError as e:
+        # Database or system errors
+        return jsonify({"error": str(e)}), 500
+    except Exception as e:
+        # Unexpected errors
+        return jsonify({"error": f"Unexpected error: {str(e)}"}), 500
