@@ -35,7 +35,7 @@
                 <p>Completa los campos para agregar un comentario a esta orden de trabajo</p>
             </div>
 
-            <form method="POST"
+            <form method="POST" enctype="multipart/form-data"
                 action="{{ url_for('toa.manage_comentarios', codigo_orden_trabajo=orden_trabajo.codigo) }}">
                 <div class="form-group">
                     <label for="num_ticket" class="form-label">Número de Ticket:</label>
@@ -50,7 +50,24 @@
                     <textarea id="comentario" name="comentario" class="form-textarea"
                         placeholder="Describe el trabajo realizado, observaciones o notas importantes..." rows="5"
                         required maxlength="256">{{ request.form.comentario if request.form.comentario }}</textarea>
-                    <small class="form-help">Máximo 256 caracteres</small>
+                    <small class="form-help">Máximo 256 caracteres. <span id="char-counter">0/256</span></small>
+                </div>
+
+                <div class="form-group">
+                    <label for="imagen" class="form-label">Imagen (Opcional):</label>
+                    <div class="file-upload-container">
+                        <input type="file" id="imagen" name="imagen" class="file-input" accept="image/*"
+                            onchange="previewImage(this)">
+                        <label for="imagen" class="file-label">
+                            <span class="file-icon">📷</span>
+                            <span class="file-text">Seleccionar imagen...</span>
+                        </label>
+                        <div id="image-preview" class="image-preview" style="display: none;">
+                            <img id="preview-img" src="" alt="Vista previa">
+                            <button type="button" class="remove-image" onclick="removeImage()">✕</button>
+                        </div>
+                    </div>
+                    <small class="form-help">Formatos: JPG, PNG, GIF, WebP. Máximo 10MB</small>
                 </div>
 
                 <div class="form-actions">
@@ -129,22 +146,61 @@
 
     // Character counter for textarea
     const textarea = document.getElementById('comentario');
+    const charCounter = document.getElementById('char-counter');
     const maxLength = 256;
 
-    if (textarea) {
-        // Create character counter element
-        const counter = document.createElement('div');
-        counter.className = 'char-counter';
-        textarea.parentNode.appendChild(counter);
-
+    if (textarea && charCounter) {
         function updateCounter() {
             const remaining = maxLength - textarea.value.length;
-            counter.textContent = `${textarea.value.length}/${maxLength} caracteres`;
-            counter.style.color = remaining < 20 ? '#e74c3c' : '#666';
+            charCounter.textContent = `${textarea.value.length}/${maxLength}`;
+            charCounter.style.color = remaining < 20 ? '#e74c3c' : '#666';
         }
 
         textarea.addEventListener('input', updateCounter);
         updateCounter();
+    }
+
+    // Image preview functionality
+    function previewImage(input) {
+        const preview = document.getElementById('image-preview');
+        const previewImg = document.getElementById('preview-img');
+        const fileLabel = document.querySelector('.file-text');
+
+        if (input.files && input.files[0]) {
+            const file = input.files[0];
+
+            // Validate file size (10MB)
+            if (file.size > 10 * 1024 * 1024) {
+                alert('La imagen es muy grande. Máximo 10MB permitido.');
+                input.value = '';
+                return;
+            }
+
+            // Validate file type
+            if (!file.type.startsWith('image/')) {
+                alert('Por favor selecciona un archivo de imagen válido.');
+                input.value = '';
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                previewImg.src = e.target.result;
+                preview.style.display = 'block';
+                fileLabel.textContent = file.name;
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
+    function removeImage() {
+        const input = document.getElementById('imagen');
+        const preview = document.getElementById('image-preview');
+        const fileLabel = document.querySelector('.file-text');
+
+        input.value = '';
+        preview.style.display = 'none';
+        fileLabel.textContent = 'Seleccionar imagen...';
     }
 
     // Form validation

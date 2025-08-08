@@ -1,10 +1,14 @@
+import os
+
 from flask import (
     Blueprint,
+    abort,
     flash,
     jsonify,
     redirect,
     render_template,
     request,
+    send_file,
     url_for,
 )
 from flask_login import current_user, login_required
@@ -25,7 +29,7 @@ TOA_MANAGE_COMENTARIOS_ROUTE = "toa.manage_comentarios"
 def _handle_route_error(e, error_route=MAIN_WELCOME_ROUTE, route_name="route"):
     """
     Common error handling for routes.
- 
+
     Args:
         e: Exception object
         error_route: Route to redirect to on error
@@ -241,11 +245,15 @@ def manage_comentarios(codigo_orden_trabajo):
                 "num_ticket": request.form.get("num_ticket", ""),
             }
 
+            # Get image file if provided
+            imagen = request.files.get("imagen") if "imagen" in request.files else None
+
             # Add comment through use case
             services.comentarios_use_case.add_comentario(
                 user=current_user,
                 codigo_orden_trabajo=codigo_orden_trabajo,
                 comentario_data=comentario_data,
+                imagen=imagen,
             )
 
             flash("Comentario agregado exitosamente", "success")
@@ -308,7 +316,7 @@ def manage_tecnicos():
 
             # Count how many tecnicos were submitted
             max_index = 0
-            for key in form_data.keys():
+            for key in form_data:
                 if key.startswith("nombre_tecnico_"):
                     index = int(key.split("_")[-1])
                     max_index = max(max_index, index)
@@ -380,3 +388,31 @@ def list_tecnicos():
 
     except Exception as e:
         return _handle_route_error(e, MAIN_WELCOME_ROUTE, "list_tecnicos")
+
+
+@toa_bp.route("/comentarios/imagen/<int:comentario_id>")
+@login_required
+def serve_comentario_image(comentario_id):
+    """Serve image for a specific comentario."""
+    try:
+        # Get the comentario
+        comentario = services.comentarios.get_comentario_by_id(comentario_id)
+        if not comentario or not comentario.imagen_path:
+            abort(404)
+
+        # Verify user has access to the orden de trabajo
+        if not comentario.orden_trabajo:
+            abort(404)
+
+        user_empresa_ids = [empresa.id for empresa in current_user.empresas]
+        if comentario.orden_trabajo.id_empresa not in user_empresa_ids:
+            abort(403)  # Forbidden
+
+        # Check if image file exists
+        if not os.path.exists(comentario.imagen_path):
+            abort(404)
+
+        return send_file(comentario.imagen_path)
+
+    except Exception:
+        abort(404)
