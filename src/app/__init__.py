@@ -7,9 +7,7 @@ from src.models import db, migrate
 
 def create_app() -> Flask:
     """Application factory pattern"""
-    app = Flask(
-        __name__, static_folder="src/app/static", template_folder="src/app/templates"
-    )
+    app = Flask(__name__, static_folder="static", template_folder="templates")
 
     # Load configuration
     app.config.from_object(Config)
