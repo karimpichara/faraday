@@ -1,0 +1,159 @@
+{% extends "_page_base.html" %}
+
+{% block title %}Gestión de Técnicos{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/manage_tecnicos.css') }}">
+{% endblock %}
+
+{% block page_content %}
+<div class="main-container">
+
+    <h1 class="page-title">Gestión de Técnicos y Supervisores</h1>
+    <p class="page-subtitle">Administra técnicos y supervisores con sincronización en tiempo real</p>
+
+    <div class="empresa-badge">
+        Empresa: {{ empresa_nombre }}
+    </div>
+
+    <!-- Add Tecnicos Form -->
+    <div class="form-card">
+        <div class="form-header">
+            <h2>➕ Agregar Técnicos</h2>
+        </div>
+
+        <form method="POST" action="{{ url_for('toa.manage_tecnicos') }}" id="tecnicos-form">
+            <!-- Supervisor Section -->
+            <div class="form-section">
+                <h3 class="section-title">👤 Supervisor</h3>
+                <div class="form-group">
+                    <label for="nombre_supervisor">Nombre del Supervisor:</label>
+                    <input type="text" id="nombre_supervisor" name="nombre_supervisor" required maxlength="128"
+                        placeholder="Ingrese el nombre del supervisor" class="form-input">
+                </div>
+            </div>
+
+            <hr class="section-divider">
+
+            <!-- Tecnicos Section -->
+            <div class="form-section">
+                <h3 class="section-title">🔧 Técnicos</h3>
+                <div id="tecnicos-list">
+                    <!-- Initial tecnico row -->
+                    <div class="tecnico-row" data-index="0">
+                        <div class="form-group">
+                            <label for="nombre_tecnico_0">Nombre del Técnico:</label>
+                            <input type="text" id="nombre_tecnico_0" name="nombre_tecnico_0" required maxlength="128"
+                                placeholder="Nombre del técnico" class="form-input">
+                        </div>
+                        <div class="form-group">
+                            <label for="rut_tecnico_0">RUT del Técnico:</label>
+                            <input type="text" id="rut_tecnico_0" name="rut_tecnico_0" required maxlength="16"
+                                placeholder="Ej: 12345678-9" class="form-input">
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-danger remove-tecnico" onclick="removeTecnico(0)"
+                                style="display: none;">
+                                ❌ Eliminar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="add-more-section">
+                    <button type="button" class="btn btn-secondary" onclick="addTecnico()">
+                        ➕ Agregar otro técnico
+                    </button>
+                </div>
+            </div>
+
+            <!-- Submit Actions -->
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">
+                    💾 Guardar Técnicos
+                </button>
+                <a href="{{ url_for('main.welcome') }}" class="btn btn-secondary">
+                    ↩️ Volver al Inicio
+                </a>
+            </div>
+        </form>
+    </div>
+
+
+</div>
+
+<script>
+    let tecnicoIndex = 1; // Start from 1 since 0 is already used
+
+    function addTecnico() {
+        const tecnicosList = document.getElementById('tecnicos-list');
+        const newTecnicoRow = document.createElement('div');
+        newTecnicoRow.className = 'tecnico-row';
+        newTecnicoRow.setAttribute('data-index', tecnicoIndex);
+
+        newTecnicoRow.innerHTML = `
+        <div class="form-group">
+            <label for="nombre_tecnico_${tecnicoIndex}">Nombre del Técnico:</label>
+            <input type="text" 
+                   id="nombre_tecnico_${tecnicoIndex}" 
+                   name="nombre_tecnico_${tecnicoIndex}" 
+                   required 
+                   maxlength="128"
+                   placeholder="Nombre del técnico"
+                   class="form-input">
+        </div>
+        <div class="form-group">
+            <label for="rut_tecnico_${tecnicoIndex}">RUT del Técnico:</label>
+            <input type="text" 
+                   id="rut_tecnico_${tecnicoIndex}" 
+                   name="rut_tecnico_${tecnicoIndex}" 
+                   required 
+                   maxlength="16"
+                   placeholder="Ej: 12345678-9"
+                   class="form-input">
+        </div>
+        <div class="form-actions">
+            <button type="button" class="btn btn-danger remove-tecnico" onclick="removeTecnico(${tecnicoIndex})">
+                ❌ Eliminar
+            </button>
+        </div>
+    `;
+
+        tecnicosList.appendChild(newTecnicoRow);
+
+        // Show remove buttons for all rows if there's more than one
+        updateRemoveButtons();
+
+        tecnicoIndex++;
+    }
+
+    function removeTecnico(index) {
+        const tecnicoRow = document.querySelector(`[data-index="${index}"]`);
+        if (tecnicoRow) {
+            tecnicoRow.remove();
+            updateRemoveButtons();
+        }
+    }
+
+    function updateRemoveButtons() {
+        const tecnicoRows = document.querySelectorAll('.tecnico-row');
+        const removeButtons = document.querySelectorAll('.remove-tecnico');
+
+        // Show remove buttons only if there's more than one row
+        if (tecnicoRows.length > 1) {
+            removeButtons.forEach(button => {
+                button.style.display = 'inline-block';
+            });
+        } else {
+            removeButtons.forEach(button => {
+                button.style.display = 'none';
+            });
+        }
+    }
+
+    // Initialize remove button visibility on page load
+    document.addEventListener('DOMContentLoaded', function () {
+        updateRemoveButtons();
+    });
+</script>
+{% endblock %}

@@ -13,6 +13,7 @@ from src.models.comentarios import Comentario  # noqa: E402,F401
 from src.models.empresas_externas_toa import EmpresasExternasToa  # noqa: E402,F401
 from src.models.historia_ot_empresas import HistoriaOtEmpresas  # noqa: E402,F401
 from src.models.orden_trabajo import OrdenTrabajo  # noqa: E402,F401
+from src.models.tecnico_supervisor import TecnicoSupervisor  # noqa: E402,F401
 
 __all__ = [
     "db",
@@ -21,6 +22,7 @@ __all__ = [
     "EmpresasExternasToa",
     "HistoriaOtEmpresas",
     "OrdenTrabajo",
+    "TecnicoSupervisor",
     "User",
     "Role",
     "UserRole",

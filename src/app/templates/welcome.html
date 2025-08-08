@@ -2,13 +2,102 @@
 
 {% block title %}Bienvenido - Control de TOA{% endblock %}
 
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/welcome.css') }}">
+{% endblock %}
+
 {% block page_header %}
-<h1><span class="emoji">💻</span> Bienvenido a Control de TOA</h1>
+
 {% endblock %}
 
 {% block page_content %}
-<div class="welcome-content">
-    <p>¡Bienvenido a la aplicación de Control de TOA!</p>
-    <p>Sistema simplificado para gestión de comentarios e imágenes para el control de TOA.</p>
+
+<!-- Main Dashboard -->
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <h1>¡Bienvenido a la aplicación de Control de TOA!</h1>
+        <h4>Sistema simplificado para gestión de comentarios e imágenes para el control de TOA.</h4>
+        <br>
+        <h3 class="dashboard-title">🚀 Funcionalidades Disponibles</h3>
+    </div>
+
+    <div class="features-grid">
+        <!-- Active Features -->
+        <a href="{{ url_for('toa.manage_tecnicos') }}" class="feature-card active">
+            <div class="feature-icon">🔧</div>
+            <div class="feature-content">
+                <h3 class="feature-title">Gestión de Técnicos</h3>
+                <p class="feature-description">Administra técnicos y supervisores con sincronización en tiempo real</p>
+            </div>
+        </a>
+
+        <a href="{{ url_for('toa.list_tecnicos') }}" class="feature-card active">
+            <div class="feature-icon">📋</div>
+            <div class="feature-content">
+                <h3 class="feature-title">Lista de Técnicos</h3>
+                <p class="feature-description">Visualiza todos los técnicos registrados en tu empresa</p>
+            </div>
+        </a>
+
+    </div>
+
+    <!-- Quick Access Section -->
+    <div class="quick-access-section">
+        <h3 class="section-title">🚀 Acceso Rápido</h3>
+        <div class="quick-access-content">
+            <div class="quick-input-group">
+                <label for="codigo-orden" class="quick-label">Comentarios por código de orden:</label>
+                <div class="input-button-group">
+                    <input type="text" id="codigo-orden" placeholder="Ej: 3-abc128d" class="quick-input">
+                    <button onclick="goToComentarios()" class="quick-btn">
+                        📝 Ir a Comentarios
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
+
+
+
+<script>
+    function goToComentarios() {
+        const codigo = document.getElementById('codigo-orden').value.trim();
+        if (codigo) {
+            window.location.href = '/toa/comentarios/' + encodeURIComponent(codigo);
+        } else {
+            // Modern alert replacement
+            showNotification('Por favor ingrese un código de orden de trabajo', 'warning');
+        }
+    }
+
+    function showNotification(message, type = 'info') {
+        // Create notification element
+        const notification = document.createElement('div');
+        notification.className = `notification notification-${type}`;
+        notification.innerHTML = `
+        <span>${message}</span>
+        <button onclick="this.parentElement.remove()">✕</button>
+    `;
+
+        // Add to page
+        document.body.appendChild(notification);
+
+        // Auto remove after 3 seconds
+        setTimeout(() => {
+            if (notification.parentElement) {
+                notification.remove();
+            }
+        }, 3000);
+    }
+
+    // Allow Enter key to submit
+    document.getElementById('codigo-orden').addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') {
+            goToComentarios();
+        }
+    });
+
+    // Notification styles are now in welcome.css
+</script>
 {% endblock %}

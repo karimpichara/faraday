@@ -1,0 +1,72 @@
+{% extends "_page_base.html" %}
+
+{% block title %}Lista de Técnicos{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/manage_tecnicos.css') }}">
+{% endblock %}
+
+{% block page_content %}
+<div class="main-container">
+
+    <h1 class="page-title">📋 Lista de Técnicos</h1>
+    <p class="page-subtitle">Visualiza todos los técnicos registrados en tu empresa</p>
+
+    <div class="empresa-badge">
+        Empresa: {{ empresa_nombre }}
+    </div>
+
+    <!-- Tecnicos List -->
+    {% if tecnicos %}
+    <div class="tecnicos-list-card">
+        <div class="list-header">
+            <h2>👥 Técnicos Registrados ({{ tecnicos|length }})</h2>
+        </div>
+
+        <div class="table-container">
+            <table class="tecnicos-table">
+                <thead>
+                    <tr>
+                        <th>🔧 Técnico</th>
+                        <th>📋 RUT</th>
+                        <th>👤 Supervisor</th>
+                        <th>📅 Fecha Registro</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for tecnico in tecnicos %}
+                    <tr>
+                        <td class="tecnico-name">{{ tecnico.nombre_tecnico }}</td>
+                        <td class="tecnico-rut">{{ tecnico.rut_tecnico }}</td>
+                        <td class="supervisor-name">{{ tecnico.nombre_supervisor }}</td>
+                        <td class="registro-date">{{ tecnico.created_at[:10] }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon">📝</div>
+        <h3>No hay técnicos registrados</h3>
+        <p>Aún no se han registrado técnicos para tu empresa.</p>
+        <div style="margin-top: 20px;">
+            <a href="{{ url_for('toa.manage_tecnicos') }}" class="btn btn-primary">
+                ➕ Agregar Primer Técnico
+            </a>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Action Buttons -->
+    <div class="form-actions" style="margin-top: 30px;">
+        <a href="{{ url_for('toa.manage_tecnicos') }}" class="btn btn-primary">
+            ➕ Agregar Técnicos
+        </a>
+        <a href="{{ url_for('main.welcome') }}" class="btn btn-secondary">
+            ↩️ Volver al Inicio
+        </a>
+    </div>
+</div>
+{% endblock %}

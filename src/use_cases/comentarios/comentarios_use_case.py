@@ -1,4 +1,6 @@
-from typing import Any
+from typing import Any, Optional
+
+from werkzeug.datastructures import FileStorage
 
 from src.models.auth.user import User
 from src.models.orden_trabajo import OrdenTrabajo
@@ -55,6 +57,7 @@ class ComentariosUseCase:
         user: User,
         codigo_orden_trabajo: str,
         comentario_data: dict[str, Any],
+        imagen: Optional[FileStorage] = None,
     ) -> dict[str, Any]:
         """
         Add a comentario to an orden de trabajo.
@@ -63,6 +66,7 @@ class ComentariosUseCase:
             user: User making the comment
             codigo_orden_trabajo: Orden de trabajo codigo
             comentario_data: Dictionary with 'comentario' and 'num_ticket' keys
+            imagen: Optional image file upload
 
         Returns:
             Dictionary with operation results
@@ -103,6 +107,7 @@ class ComentariosUseCase:
                 num_ticket=num_ticket,
                 id_orden_trabajo=orden_trabajo.id,
                 id_usuario=user.id,
+                imagen=imagen,
             )
 
             return {
