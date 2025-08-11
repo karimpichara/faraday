@@ -37,3 +37,10 @@ class HistoriaIniciadosService:
         return HistoriaOtEmpresas.get_historia_iniciados_by_rango_fecha(
             fecha_inicio, fecha_fin
         )
+
+    def get_historia_iniciados_by_zone_enterprize(
+        self, zone: str, empresa: str
+    ) -> list[dict[str, Any]]:
+        return HistoriaOtEmpresas.get_historia_iniciados_by_zone_enterprize(
+            zone, empresa
+        )

@@ -150,3 +150,56 @@ class HistoriaIniciadosUseCase:
             raise RuntimeError(
                 f"Error al obtener historia OT empresas: {str(e)}"
             ) from e
+
+    def get_historia_iniciados_by_zone_enterprize(
+        self, zone: str, empresa: str
+    ) -> list[dict[str, Any]]:
+
+        historia_records = (
+            self.historia_iniciados_service.get_historia_iniciados_by_zone_enterprize(
+                zone, empresa
+            )
+        )
+        return {
+            "historia_ot_empresas": [
+                {
+                    "id": record.id,
+                    "zona": record.zona,
+                    "orden_de_trabajo": record.orden_de_trabajo,
+                    "empresa": record.empresa,
+                    "tecnico": record.tecnico,
+                    "coord_x": record.coord_x,
+                    "coord_y": record.coord_y,
+                    "duracion": record.duracion,
+                    "estado": record.estado,
+                    "fecha": record.fecha,
+                    "flag_consulta_vecino": record.flag_consulta_vecino,
+                    "flag_estado_aprovision": record.flag_estado_aprovision,
+                    "flag_fallas_masivas": record.flag_fallas_masivas,
+                    "flag_materiales": record.flag_materiales,
+                    "flag_niveles": record.flag_niveles,
+                    "hora_flag_estado_aprovision": record.hora_flag_estado_aprovision,
+                    "hora_flag_fallas_masivas": record.hora_flag_fallas_masivas,
+                    "hora_flag_materiales": record.hora_flag_materiales,
+                    "hora_flag_niveles": record.hora_flag_niveles,
+                    "inicio": record.inicio,
+                    "intervencion_neutra": record.intervencion_neutra,
+                    "notas_consulta_vecino": record.notas_consulta_vecino,
+                    "notas_consulta_vecino_ultimo": record.notas_consulta_vecino_ultimo,
+                    "qr_drop": record.qr_drop,
+                    "rut_tecnico": record.rut_tecnico,
+                    "tipo_red_producto": record.tipo_red_producto,
+                    "hora_ultima_vecino": record.hora_ultima_vecino,
+                    "hora_qr": record.hora_qr,
+                    "tipo_actividad": record.tipo_actividad,
+                    "zona_de_trabajo": record.zona_de_trabajo,
+                    "pasos": record.pasos,
+                    "pelo": record.pelo,
+                    "created_at": record.created_at.isoformat(),
+                    "updated_at": record.updated_at.isoformat(),
+                    "active": record.active,
+                }
+                for record in historia_records
+            ],
+            "total": len(historia_records),
+        }

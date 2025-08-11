@@ -91,6 +91,12 @@ class HistoriaOtEmpresas(BaseModel):
         ).all()
 
     @classmethod
+    def get_historia_iniciados_by_zone_enterprize(
+        cls, zone: str, empresa: str
+    ) -> list[dict[str, Any]]:
+        return cls.query.filter(cls.zona == zone, cls.empresa == empresa).all()
+
+    @classmethod
     def set_historia_iniciados(
         cls, data: dict[str, Any], zona: str, empresa: str
     ) -> (
