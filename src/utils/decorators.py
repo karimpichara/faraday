@@ -1,15 +1,15 @@
 from functools import wraps
 
-from flask import flash, jsonify, redirect, request, url_for
+from flask import current_app, flash, jsonify, redirect, request, url_for
 from flask_login import current_user
 
 
-def require_token(expected_token: str = "1234567890"):
+def require_token(expected_token: str = None):
     """
     Decorator to validate authentication token from request headers.
 
     Args:
-        expected_token: The expected token value (defaults to "1234567890")
+        expected_token: The expected token value (defaults to API_TOKEN from config)
 
     Returns:
         Decorator function that validates the token before executing the route
@@ -27,6 +27,11 @@ def require_token(expected_token: str = "1234567890"):
     def decorator(f):
         @wraps(f)
         def decorated_function(*args, **kwargs):
+            # Get expected token from config if not provided
+            token_to_check = expected_token or current_app.config.get(
+                "API_TOKEN", "1234567890"
+            )
+
             # Get token from headers
             token = request.headers.get("Token")
 
@@ -35,7 +40,7 @@ def require_token(expected_token: str = "1234567890"):
                 return jsonify({"error": "Se requiere el header de token"}), 401
 
             # Validate token
-            if token != expected_token:
+            if token != token_to_check:
                 return jsonify({"error": "Token de autenticación inválido"}), 401
 
             # Token is valid, proceed with the original function
@@ -77,12 +82,12 @@ def require_json():
     return decorator
 
 
-def require_token_and_json(expected_token: str = "1234567890"):
+def require_token_and_json(expected_token: str = None):
     """
     Combined decorator that requires both valid token and JSON data.
 
     Args:
-        expected_token: The expected token value (defaults to "1234567890")
+        expected_token: The expected token value (defaults to API_TOKEN from config)
 
     Usage:
         @require_token_and_json()
@@ -98,12 +103,17 @@ def require_token_and_json(expected_token: str = "1234567890"):
             if not request.is_json:
                 return jsonify({"error": "Content-Type debe ser application/json"}), 400
 
+            # Get expected token from config if not provided
+            token_to_check = expected_token or current_app.config.get(
+                "API_TOKEN", "1234567890"
+            )
+
             # Get and validate token from headers
             token = request.headers.get("Token")
             if not token:
                 return jsonify({"error": "Se requiere el header de token"}), 401
 
-            if token != expected_token:
+            if token != token_to_check:
                 return jsonify({"error": "Token de autenticación inválido"}), 401
 
             # Validate JSON data

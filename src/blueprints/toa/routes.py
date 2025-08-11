@@ -200,7 +200,7 @@ def add_ordenes_trabajo():
     ]
 
     Headers:
-        Token: Authentication token (default: "1234567890")
+        Token: Authentication token (configured via API_TOKEN env var)
         Content-Type: application/json
 
     Returns:
@@ -232,7 +232,7 @@ def get_all_comentarios():
     Get all comentarios from the system.
 
     Headers:
-        Token: Authentication token (default: "1234567890")
+        Token: Authentication token (configured via API_TOKEN env var)
 
     Returns:
         JSON response with all comentarios data including:
@@ -259,7 +259,7 @@ def get_all_historia_ot_empresas():
     Get all historia OT empresas from the system.
 
     Headers:
-        Token: Authentication token (default: "1234567890")
+        Token: Authentication token (configured via API_TOKEN env var)
 
     Returns:
         JSON response with all historia OT empresas data including:
