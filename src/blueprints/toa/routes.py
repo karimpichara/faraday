@@ -173,6 +173,7 @@ def set_empresas_externas_toa():
 
 
 @toa_bp.route("/get_empresas_externas", methods=["GET"])
+@require_token()
 def get_empresas_externas_toa():
     """
     Get all EmpresasExternasToa records.
@@ -269,6 +270,64 @@ def get_all_historia_ot_empresas():
     try:
         # Get all historia OT empresas through use case (no token needed, already validated)
         result = services.historia_iniciados_use_case.get_all_historia_ot_empresas()
+        return jsonify(result), 200
+
+    except RuntimeError as e:
+        # Database or system errors
+        return jsonify({"error": str(e)}), 500
+    except Exception as e:
+        # Unexpected errors
+        return jsonify({"error": f"Error inesperado: {str(e)}"}), 500
+
+
+@toa_bp.route("/ordenes_trabajo", methods=["GET"])
+@require_token()
+def get_all_ordenes_trabajo():
+    """
+    Get all ordenes de trabajo from the system.
+
+    Headers:
+        Token: Authentication token (configured via API_TOKEN env var)
+
+    Returns:
+        JSON response with all ordenes de trabajo data including:
+        - ordenes_trabajo: List of all records with details
+        - total: Total number of records
+    """
+    try:
+        # Get all ordenes de trabajo through use case (no token needed, already validated)
+        result = services.orden_trabajo_use_case.get_all_ordenes_trabajo()
+        return jsonify(result), 200
+
+    except RuntimeError as e:
+        # Database or system errors
+        return jsonify({"error": str(e)}), 500
+    except Exception as e:
+        # Unexpected errors
+        return jsonify({"error": f"Error inesperado: {str(e)}"}), 500
+
+
+@toa_bp.route("/users", methods=["GET"])
+@require_token()
+def get_all_users():
+    """
+    Get all users from the system.
+
+    Headers:
+        Token: Authentication token (configured via API_TOKEN env var)
+
+    Returns:
+        JSON response with all users data including:
+        - users: List of all active users with details
+        - total: Total number of users
+    """
+    try:
+        # Get all users through use case (no token needed, already validated)
+        result = services.user_use_case.get_all_users_data()
+
+        # Rename the key to match the pattern of other endpoints
+        result["users"] = result.pop("users")  # Keep the same key
+
         return jsonify(result), 200
 
     except RuntimeError as e:

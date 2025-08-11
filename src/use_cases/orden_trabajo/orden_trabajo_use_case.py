@@ -110,9 +110,7 @@ class OrdenTrabajoUseCase:
                     f"Se omitieron {result['skipped_count']} órdenes existentes"
                 )
             if len(all_errors) > 0:
-                message_parts.append(
-                    f"Se encontraron {len(all_errors)} errores"
-                )
+                message_parts.append(f"Se encontraron {len(all_errors)} errores")
 
             message = (
                 ". ".join(message_parts)
@@ -130,3 +128,35 @@ class OrdenTrabajoUseCase:
 
         except Exception as e:
             raise RuntimeError(f"Error de base de datos: {str(e)}") from e
+
+    def get_all_ordenes_trabajo(self) -> dict[str, Any]:
+        """
+        Get all ordenes de trabajo from the system.
+
+        Returns:
+            Dictionary with all ordenes de trabajo data
+
+        Raises:
+            RuntimeError: If database operation fails
+        """
+        try:
+            # Get all ordenes through service
+            ordenes = self.orden_trabajo_service.get_ordenes_trabajo_all()
+
+            return {
+                "ordenes_trabajo": [
+                    {
+                        "id": orden.id,
+                        "codigo": orden.codigo,
+                        "id_empresa": orden.id_empresa,
+                        "created_at": orden.created_at.isoformat(),
+                        "updated_at": orden.updated_at.isoformat(),
+                        "active": orden.active,
+                    }
+                    for orden in ordenes
+                ],
+                "total": len(ordenes),
+            }
+
+        except Exception as e:
+            raise RuntimeError(f"Error al obtener órdenes de trabajo: {str(e)}") from e
