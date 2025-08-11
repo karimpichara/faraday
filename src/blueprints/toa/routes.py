@@ -173,6 +173,7 @@ def set_empresas_externas_toa():
 
 
 @toa_bp.route("/get_empresas_externas", methods=["GET"])
+@require_token()
 def get_empresas_externas_toa():
     """
     Get all EmpresasExternasToa records.
@@ -182,6 +183,32 @@ def get_empresas_externas_toa():
     """
     try:
         result = services.empresas_externas_use_case.get_empresas_externas_toa_all()
+        return jsonify(result), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@toa_bp.route("/ordenes_trabajo", methods=["GET"])
+@require_token()
+def get_all_ordenes_trabajo():
+    """
+    Get all OrdenesTrabajo records.
+    """
+    try:
+        result = services.orden_trabajo_use_case.get_all_ordenes_trabajo()
+        return jsonify(result), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@toa_bp.route("/users", methods=["GET"])
+@require_token()
+def get_users():
+    """
+    Get all Users records.
+    """
+    try:
+        result = services.user_use_case.get_all_users_data()
         return jsonify(result), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -200,7 +227,7 @@ def add_ordenes_trabajo():
     ]
 
     Headers:
-        Token: Authentication token (default: "1234567890")
+        Token: Authentication token (configured via API_TOKEN env var)
         Content-Type: application/json
 
     Returns:
@@ -232,7 +259,7 @@ def get_all_comentarios():
     Get all comentarios from the system.
 
     Headers:
-        Token: Authentication token (default: "1234567890")
+        Token: Authentication token (configured via API_TOKEN env var)
 
     Returns:
         JSON response with all comentarios data including:
@@ -259,7 +286,7 @@ def get_all_historia_ot_empresas():
     Get all historia OT empresas from the system.
 
     Headers:
-        Token: Authentication token (default: "1234567890")
+        Token: Authentication token (configured via API_TOKEN env var)
 
     Returns:
         JSON response with all historia OT empresas data including:
