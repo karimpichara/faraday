@@ -167,6 +167,37 @@
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
+/* Dev-only feature card styles */
+.feature-card.dev-only {
+    border: 2px solid #f39c12;
+    background: linear-gradient(135deg, #fff9e6 0%, #fef3cd 100%);
+    position: relative;
+}
+
+.feature-card.dev-only::before {
+    background: linear-gradient(90deg, #f39c12, #e67e22);
+    opacity: 1;
+}
+
+.feature-card.dev-only:hover {
+    border-color: #e67e22;
+    box-shadow: 0 20px 25px -5px rgba(243, 156, 18, 0.2), 0 10px 10px -5px rgba(243, 156, 18, 0.1);
+}
+
+.dev-badge-card {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 4px rgba(243, 156, 18, 0.3);
+}
+
 .feature-icon {
     font-size: 3rem;
     margin-bottom: 20px;

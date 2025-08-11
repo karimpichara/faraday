@@ -39,6 +39,17 @@
             </div>
         </a>
 
+        {% if username == 'dev' %}
+        <a href="{{ url_for('main.manage_users') }}" class="feature-card active dev-only">
+            <div class="feature-icon">👤</div>
+            <div class="feature-content">
+                <h3 class="feature-title">Gestión de Usuarios</h3>
+                <p class="feature-description">Panel de administración exclusivo para gestionar usuarios del sistema</p>
+                <div class="dev-badge-card">DEV ONLY</div>
+            </div>
+        </a>
+        {% endif %}
+
     </div>
 
     <!-- Quick Access Section -->

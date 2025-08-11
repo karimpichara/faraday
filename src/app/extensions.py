@@ -6,6 +6,7 @@ from src.services.empresas_externas_service import EmpresasExternasService
 from src.services.historia_iniciados_service import HistoriaIniciadosService
 from src.services.orden_trabajo_service import OrdenTrabajoService
 from src.services.tecnico_supervisor_service import TecnicoSupervisorService
+from src.services.user_service import UserService
 from src.use_cases.comentarios.comentarios_use_case import ComentariosUseCase
 from src.use_cases.empresas.empresas_externas_use_case import EmpresasExternasUseCase
 from src.use_cases.historia_ot.historia_iniciados_use_case import (
@@ -13,6 +14,7 @@ from src.use_cases.historia_ot.historia_iniciados_use_case import (
 )
 from src.use_cases.orden_trabajo.orden_trabajo_use_case import OrdenTrabajoUseCase
 from src.use_cases.tecnicos.tecnico_supervisor_use_case import TecnicoSupervisorUseCase
+from src.use_cases.users.user_use_case import UserUseCase
 
 
 class Services:
@@ -24,11 +26,13 @@ class Services:
         self.orden_trabajo: OrdenTrabajoService | None = None
         self.comentarios: ComentariosService | None = None
         self.tecnico_supervisor: TecnicoSupervisorService | None = None
+        self.user: UserService | None = None
         self.historia_iniciados_use_case: HistoriaIniciadosUseCase | None = None
         self.empresas_externas_use_case: EmpresasExternasUseCase | None = None
         self.orden_trabajo_use_case: OrdenTrabajoUseCase | None = None
         self.comentarios_use_case: ComentariosUseCase | None = None
         self.tecnico_supervisor_use_case: TecnicoSupervisorUseCase | None = None
+        self.user_use_case: UserUseCase | None = None
         self._initialized = False
 
         if app is not None:
@@ -48,6 +52,7 @@ class Services:
         self.orden_trabajo = OrdenTrabajoService()
         self.comentarios = ComentariosService()
         self.tecnico_supervisor = TecnicoSupervisorService()
+        self.user = UserService()
 
         # Initialize use cases with dependencies
         self.historia_iniciados_use_case = HistoriaIniciadosUseCase(
@@ -65,6 +70,7 @@ class Services:
         self.tecnico_supervisor_use_case = TecnicoSupervisorUseCase(
             self.tecnico_supervisor
         )
+        self.user_use_case = UserUseCase(self.user)
 
         app.extensions["services"] = self
         self._initialized = True

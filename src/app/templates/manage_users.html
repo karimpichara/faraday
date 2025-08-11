@@ -1,0 +1,222 @@
+{% extends "_page_base.html" %}
+
+{% block title %}Gestión de Usuarios{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/manage_users.css') }}">
+{% endblock %}
+
+{% block page_content %}
+<div class="user-management-container">
+    <h1 class="page-title">👤 Gestión de Usuarios</h1>
+    <p class="page-subtitle">Panel de administración exclusivo para usuario 'dev'</p>
+
+    <div class="dev-only-notice">
+        🔒 Acceso Restringido: Solo el usuario 'dev' puede gestionar usuarios del sistema
+    </div>
+
+    <!-- Add User Form -->
+    <div class="form-card">
+        <div class="form-header">
+            <h2>➕ Crear Nuevo Usuario</h2>
+        </div>
+
+        <div class="form-content">
+            <form method="POST" action="{{ url_for('main.manage_users') }}" id="user-form">
+                <div class="form-group">
+                    <label for="username">Nombre de Usuario:</label>
+                    <input type="text" id="username" name="username" required
+                        placeholder="Ingrese el nombre de usuario (mínimo 3 caracteres)">
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Contraseña:</label>
+                    <input type="password" id="password" name="password" required
+                        placeholder="Ingrese la contraseña (mínimo 4 caracteres)">
+                </div>
+
+                <div class="form-group">
+                    <label for="empresa_id">Empresa:</label>
+                    <div class="empresa-search">
+                        <select id="empresa_id" name="empresa_id" required>
+                            <option value="">Seleccione una empresa...</option>
+                            {% for empresa in empresas %}
+                            <option value="{{ empresa.id }}">{{ empresa.display_name }}</option>
+                            {% endfor %}
+                        </select>
+                        <span class="search-icon">🔍</span>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn">✅ Crear Usuario</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Users List -->
+    <div class="form-card">
+        <div class="form-header">
+            <h2>📋 Lista de Usuarios ({{ users|length }} usuarios)</h2>
+        </div>
+
+        <div class="form-content">
+            {% if users %}
+            <table class="users-table">
+                <thead>
+                    <tr>
+                        <th>Usuario</th>
+                        <th>Roles</th>
+                        <th>Empresa</th>
+                        <th>Fecha Creación</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr>
+                        <td>
+                            {{ user.username }}
+                            {% if user.is_dev %}
+                            <span class="dev-badge">DEV</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% for role in user.roles %}
+                            <span>{{ role }}</span>
+                            {% endfor %}
+                        </td>
+                        <td>
+                            {% for empresa in user.empresas %}
+                            <div class="empresa-info">
+                                <strong>{{ empresa.nombre }}</strong><br>
+                                <small>{{ empresa.nombre_toa }}</small>
+                            </div>
+                            {% endfor %}
+                        </td>
+                        <td>{{ user.created_at[:10] }}</td>
+                        <td>
+                            <div class="actions">
+                                {% if not user.is_dev %}
+                                <button type="button" class="btn btn-small edit-user-btn" data-user-id="{{ user.id }}"
+                                    data-username="{{ user.username }}">
+                                    ✏️ Editar
+                                </button>
+                                <form method="POST" action="{{ url_for('main.delete_user', user_id=user.id) }}"
+                                    class="inline-form"
+                                    onsubmit="return confirm('¿Está seguro de desactivar este usuario? El usuario se marcará como inactivo pero se puede restaurar después.')">
+                                    <button type="submit" class="btn btn-danger btn-small">
+                                        🚫 Desactivar
+                                    </button>
+                                </form>
+                                {% else %}
+                                <span class="empresa-info">Usuario protegido</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p class="empty-users">
+                No hay usuarios registrados en el sistema.
+            </p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Edit User Modal -->
+<div id="edit-modal" class="edit-modal">
+    <div class="edit-modal-content">
+        <h3>✏️ Editar Usuario</h3>
+        <form method="POST" action="" id="edit-form">
+            <div class="form-group">
+                <label for="edit-username">Nombre de Usuario:</label>
+                <input type="text" id="edit-username" name="username" required>
+            </div>
+
+            <div class="form-group">
+                <label for="edit-password">Nueva Contraseña (opcional):</label>
+                <input type="password" id="edit-password" name="password"
+                    placeholder="Dejar vacío para mantener la actual">
+            </div>
+
+            <div class="form-group">
+                <label for="edit-empresa-id">Empresa:</label>
+                <select id="edit-empresa-id" name="empresa_id" required>
+                    {% for empresa in empresas %}
+                    <option value="{{ empresa.id }}">{{ empresa.display_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="modal-actions">
+                <button type="submit" class="btn">💾 Guardar Cambios</button>
+                <button type="button" class="btn btn-cancel" onclick="closeEditModal()">❌ Cancelar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function editUser(userId, currentUsername) {
+        const modal = document.getElementById('edit-modal');
+        const form = document.getElementById('edit-form');
+        const usernameInput = document.getElementById('edit-username');
+
+        // Set form action
+        form.action = "{{ url_for('main.edit_user', user_id=0) }}".replace('0', userId);
+
+        // Set current username
+        usernameInput.value = currentUsername;
+
+        // Show modal
+        modal.style.display = 'block';
+    }
+
+    function closeEditModal() {
+        const modal = document.getElementById('edit-modal');
+        modal.style.display = 'none';
+
+        // Clear form
+        document.getElementById('edit-form').reset();
+    }
+
+    // Initialize when DOM is ready
+    document.addEventListener('DOMContentLoaded', function () {
+        // Add event listeners to edit buttons
+        const editButtons = document.querySelectorAll('.edit-user-btn');
+        editButtons.forEach(button => {
+            button.addEventListener('click', function () {
+                const userId = this.getAttribute('data-user-id');
+                const username = this.getAttribute('data-username');
+                editUser(userId, username);
+            });
+        });
+
+        // Close modal when clicking outside
+        const modal = document.getElementById('edit-modal');
+        modal.addEventListener('click', function (e) {
+            if (e.target === this) {
+                closeEditModal();
+            }
+        });
+
+        // Enhanced empresa search
+        const empresaSelect = document.getElementById('empresa_id');
+        const editEmpresaSelect = document.getElementById('edit-empresa-id');
+
+        // Add search functionality (basic)
+        [empresaSelect, editEmpresaSelect].forEach(select => {
+            if (select) {
+                select.addEventListener('change', function () {
+                    if (this.value) {
+                        this.style.borderColor = '#27ae60';
+                    }
+                });
+            }
+        });
+    });
+</script>
+{% endblock %}

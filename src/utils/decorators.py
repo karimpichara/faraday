@@ -1,6 +1,7 @@
 from functools import wraps
 
-from flask import jsonify, request
+from flask import flash, jsonify, redirect, request, url_for
+from flask_login import current_user
 
 
 def require_token(expected_token: str = "1234567890"):
@@ -111,6 +112,46 @@ def require_token_and_json(expected_token: str = "1234567890"):
                 return jsonify({"error": "Datos JSON inválidos o faltantes"}), 400
 
             # All validations passed, proceed with the original function
+            return f(*args, **kwargs)
+
+        return decorated_function
+
+    return decorator
+
+
+def dev_only(redirect_route: str = "main.welcome"):
+    """
+    Decorator to restrict access to the 'dev' user only.
+
+    Args:
+        redirect_route: Route to redirect to if access is denied
+
+    Usage:
+        @dev_only()
+        def admin_function():
+            return "Dev only content"
+        @dev_only("main.login")
+        def other_admin_function():
+            return "Dev only content"
+    """
+
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            # Check if user is authenticated
+            if not current_user.is_authenticated:
+                flash("Debe iniciar sesión para acceder a esta página", "error")
+                return redirect(url_for("main.login"))
+
+            # Check if user is 'dev'
+            if current_user.username != "dev":
+                flash(
+                    "Acceso denegado. Solo el usuario 'dev' puede acceder a esta página",
+                    "error",
+                )
+                return redirect(url_for(redirect_route))
+
+            # User is dev, proceed with the original function
             return f(*args, **kwargs)
 
         return decorated_function

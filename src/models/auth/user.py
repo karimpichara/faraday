@@ -35,7 +35,7 @@ class User(UserMixin, BaseModel):
 
     @classmethod
     def get_by_username(cls, username):
-        return cls.query.filter_by(username=username).first()
+        return cls.active_records().filter_by(username=username).first()
 
     @classmethod
     def authenticate(cls, username, password) -> bool:
