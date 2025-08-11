@@ -207,3 +207,37 @@ class ComentariosUseCase:
                 for comentario in comentarios
             ],
         }
+
+    def get_all_comentarios(self) -> dict[str, Any]:
+        """
+        Get all comentarios from the system.
+
+        Returns:
+            Dictionary with all comentarios data
+
+        Raises:
+            RuntimeError: If database operation fails
+        """
+        try:
+            # Get all comentarios through service
+            comentarios = self.comentarios_service.get_all_comentarios()
+
+            return {
+                "comentarios": [
+                    {
+                        "id": comentario.id,
+                        "comentario": comentario.comentario,
+                        "num_ticket": comentario.num_ticket,
+                        "created_at": comentario.created_at.isoformat(),
+                        "id_usuario": comentario.id_usuario,
+                        "id_orden_trabajo": comentario.id_orden_trabajo,
+                        "imagen_path": comentario.imagen_path,
+                        "imagen_original_name": comentario.imagen_original_name,
+                    }
+                    for comentario in comentarios
+                ],
+                "total": len(comentarios),
+            }
+
+        except Exception as e:
+            raise RuntimeError(f"Error al obtener comentarios: {str(e)}") from e

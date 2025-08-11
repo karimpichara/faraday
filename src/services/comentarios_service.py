@@ -119,6 +119,15 @@ class ComentariosService:
         """
         return Comentario.query.filter_by(id_orden_trabajo=id_orden_trabajo).count()
 
+    def get_all_comentarios(self) -> list[Comentario]:
+        """
+        Get all comentarios from the system.
+
+        Returns:
+            List of all Comentario instances ordered by creation date (newest first)
+        """
+        return Comentario.query.order_by(Comentario.created_at.desc()).all()
+
     def delete_comentario(self, comentario_id: int) -> bool:
         """
         Delete a comentario and its associated image.

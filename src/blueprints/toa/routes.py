@@ -14,7 +14,7 @@ from flask import (
 from flask_login import current_user, login_required
 
 from src.app.extensions import services
-from src.utils.decorators import require_token_and_json
+from src.utils.decorators import require_token, require_token_and_json
 
 toa_bp = Blueprint("toa", __name__, url_prefix="/toa")
 
@@ -217,6 +217,33 @@ def add_ordenes_trabajo():
     except ValueError as e:
         # Validation errors (data format, business rules, etc.)
         return jsonify({"error": str(e)}), 400
+    except RuntimeError as e:
+        # Database or system errors
+        return jsonify({"error": str(e)}), 500
+    except Exception as e:
+        # Unexpected errors
+        return jsonify({"error": f"Error inesperado: {str(e)}"}), 500
+
+
+@toa_bp.route("/comentarios", methods=["GET"])
+@require_token()
+def get_all_comentarios():
+    """
+    Get all comentarios from the system.
+
+    Headers:
+        Token: Authentication token (default: "1234567890")
+
+    Returns:
+        JSON response with all comentarios data including:
+        - comentarios: List of all comentarios with full details
+        - total: Total number of comentarios
+    """
+    try:
+        # Get all comentarios through use case (no token needed, already validated)
+        result = services.comentarios_use_case.get_all_comentarios()
+        return jsonify(result), 200
+
     except RuntimeError as e:
         # Database or system errors
         return jsonify({"error": str(e)}), 500
