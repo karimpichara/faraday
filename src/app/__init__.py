@@ -17,8 +17,12 @@ def create_app() -> Flask:
     # Set process timezone (defaults to America/Santiago, can be overridden via APP_TIMEZONE)
     timezone_name = os.environ.get("APP_TIMEZONE", "America/Santiago")
     os.environ["TZ"] = timezone_name
-    if hasattr(time, "tzset"):
+    try:
         time.tzset()
+        print("Timezone set successfully")
+    except Exception as e:
+        # For Windows users, this will fail and we can ignore it
+        print(f"Error setting timezone: {e}")
 
     # Initialize extensions
     db.init_app(app)
