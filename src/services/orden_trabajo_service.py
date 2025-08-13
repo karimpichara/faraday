@@ -35,7 +35,7 @@ class OrdenTrabajoService:
 
         # Prepare data for bulk insert with conflict handling
         import uuid
-        from datetime import datetime, timezone
+        from datetime import datetime
 
         insert_data = []
         all_codigos = []
@@ -50,8 +50,8 @@ class OrdenTrabajoService:
                     "codigo": codigo,
                     "id_empresa": orden_data["id_empresa"],
                     "uuid": str(uuid.uuid4()),
-                    "created_at": datetime.now(timezone.utc),
-                    "updated_at": datetime.now(timezone.utc),
+                    "created_at": datetime.now(),
+                    "updated_at": datetime.now(),
                     "active": True,
                 }
             )

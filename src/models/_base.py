@@ -2,7 +2,7 @@
 # Contains id, uuid, created_at, updated_at, active
 
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Any
 
 from sqlalchemy import Boolean, DateTime
@@ -30,14 +30,12 @@ class BaseModel(db.Model, ToDictMixin):
     uuid = db.Column(
         db.String(36), unique=True, nullable=False, default=lambda: str(uuid.uuid4())
     )
-    created_at = db.Column(
-        DateTime, nullable=False, default=lambda: datetime.now(timezone.utc)
-    )
+    created_at = db.Column(DateTime, nullable=False, default=datetime.now)
     updated_at = db.Column(
         DateTime,
         nullable=False,
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
+        default=datetime.now,
+        onupdate=datetime.now,
     )
     active = db.Column(Boolean, nullable=False, default=True, index=True)
 
@@ -49,9 +47,9 @@ class BaseModel(db.Model, ToDictMixin):
     def soft_delete(self) -> None:
         """Mark this record as inactive (soft delete)."""
         self.active = False
-        self.updated_at = datetime.now(timezone.utc)
+        self.updated_at = datetime.now()
 
     def restore(self) -> None:
         """Mark this record as active (restore from soft delete)."""
         self.active = True
-        self.updated_at = datetime.now(timezone.utc)
+        self.updated_at = datetime.now()
