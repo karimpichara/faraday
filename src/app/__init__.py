@@ -1,4 +1,6 @@
 from flask import Flask
+import os
+import time
 
 from src.app.extensions import login_manager, services
 from src.config import Config
@@ -11,6 +13,12 @@ def create_app() -> Flask:
 
     # Load configuration
     app.config.from_object(Config)
+
+    # Set process timezone (defaults to America/Santiago, can be overridden via APP_TIMEZONE)
+    timezone_name = os.environ.get("APP_TIMEZONE", "America/Santiago")
+    os.environ["TZ"] = timezone_name
+    if hasattr(time, "tzset"):
+        time.tzset()
 
     # Initialize extensions
     db.init_app(app)
