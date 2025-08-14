@@ -20,6 +20,7 @@ from src.utils.decorators import (
     require_token,
     require_token_and_json,
 )
+from src.utils.image_utils import serve_default_placeholder_image
 
 toa_bp = Blueprint("toa", __name__, url_prefix="/toa")
 
@@ -565,6 +566,52 @@ def serve_comentario_image(comentario_id):
 
     except Exception:
         abort(404)
+
+
+@toa_bp.route("/powerbi/comentarios/imagen/<int:comentario_id>")
+@require_basic_auth()
+def serve_comentario_image_powerbi(comentario_id):
+    """
+    PowerBI-specific endpoint to serve images for comentarios.
+    Always returns an image - either the actual image or a default placeholder.
+    Uses Basic Authentication instead of session-based auth.
+    """
+    try:
+        # Get the comentario
+        comentario = services.comentarios.get_comentario_by_id(comentario_id)
+
+        # If comentario doesn't exist or has no image, return default placeholder
+        if not comentario or not comentario.imagen_path:
+            return serve_default_placeholder_image()
+
+        # Build the full image path
+        from src.constants import ROOT_PATH
+
+        if os.path.isabs(comentario.imagen_path):
+            full_image_path = comentario.imagen_path
+        else:
+            full_image_path = os.path.join(ROOT_PATH, comentario.imagen_path)
+
+        # If image file doesn't exist, return placeholder
+        if not os.path.exists(full_image_path):
+            current_app.logger.warning(
+                f"PowerBI: Image file not found for comentario {comentario_id}: {full_image_path}"
+            )
+            return serve_default_placeholder_image()
+
+        # Log successful access for monitoring
+        current_app.logger.info(
+            f"PowerBI: Serving image for comentario {comentario_id}"
+        )
+
+        return send_file(full_image_path)
+
+    except Exception as e:
+        # Log error and return placeholder instead of 404
+        current_app.logger.error(
+            f"PowerBI: Error serving image for comentario {comentario_id}: {str(e)}"
+        )
+        return serve_default_placeholder_image()
 
 
 @toa_bp.route("/ordenes/comentarios", methods=["GET"])
