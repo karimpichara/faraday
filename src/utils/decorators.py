@@ -1,3 +1,5 @@
+import base64
+import os
 from functools import wraps
 
 from flask import current_app, flash, jsonify, redirect, request, url_for
@@ -162,6 +164,82 @@ def dev_only(redirect_route: str = "main.welcome"):
                 return redirect(url_for(redirect_route))
 
             # User is dev, proceed with the original function
+            return f(*args, **kwargs)
+
+        return decorated_function
+
+    return decorator
+
+
+def require_basic_auth(username: str = None, password: str = None):
+    """
+    Decorator to require HTTP Basic Authentication.
+
+    Args:
+        username: Expected username (defaults to BASIC_AUTH_USERNAME from config/env)
+        password: Expected password (defaults to BASIC_AUTH_PASSWORD from config/env)
+
+    Usage:
+        @require_basic_auth()
+        def protected_route():
+            return "Protected content"
+
+        @require_basic_auth("admin", "secret")
+        def custom_auth_route():
+            return "Custom auth content"
+    """
+
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            # Get credentials from config or environment if not provided
+            expected_username = (
+                username
+                or current_app.config.get("BASIC_AUTH_USERNAME")
+                or os.getenv("BASIC_AUTH_USERNAME")
+            )
+            expected_password = (
+                password
+                or current_app.config.get("BASIC_AUTH_PASSWORD")
+                or os.getenv("BASIC_AUTH_PASSWORD")
+            )
+
+            if not expected_username or not expected_password:
+                return jsonify({"error": "Basic auth credentials not configured"}), 500
+
+            # Get Authorization header
+            auth_header = request.headers.get("Authorization")
+
+            if not auth_header or not auth_header.startswith("Basic "):
+                response = jsonify({"error": "Authentication required"})
+                response.headers["WWW-Authenticate"] = 'Basic realm="Login Required"'
+                return response, 401
+
+            try:
+                # Decode base64 credentials
+                encoded_credentials = auth_header.split(" ")[1]
+                decoded_credentials = base64.b64decode(encoded_credentials).decode(
+                    "utf-8"
+                )
+                provided_username, provided_password = decoded_credentials.split(":", 1)
+
+                # Verify credentials
+                if (
+                    provided_username != expected_username
+                    or provided_password != expected_password
+                ):
+                    response = jsonify({"error": "Invalid credentials"})
+                    response.headers["WWW-Authenticate"] = (
+                        'Basic realm="Login Required"'
+                    )
+                    return response, 401
+
+            except (ValueError, UnicodeDecodeError):
+                response = jsonify({"error": "Invalid authorization header format"})
+                response.headers["WWW-Authenticate"] = 'Basic realm="Login Required"'
+                return response, 401
+
+            # Authentication successful, proceed with the original function
             return f(*args, **kwargs)
 
         return decorated_function

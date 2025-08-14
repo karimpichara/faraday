@@ -14,7 +14,11 @@ from flask import (
 from flask_login import current_user, login_required
 
 from src.app.extensions import services
-from src.utils.decorators import require_token, require_token_and_json
+from src.utils.decorators import (
+    require_basic_auth,
+    require_token,
+    require_token_and_json,
+)
 
 toa_bp = Blueprint("toa", __name__, url_prefix="/toa")
 
@@ -281,7 +285,7 @@ def get_all_historia_ot_empresas():
 
 
 @toa_bp.route("/ordenes_trabajo", methods=["GET"])
-@require_token()
+@require_basic_auth()
 def get_all_ordenes_trabajo():
     """
     Get all ordenes de trabajo from the system.
