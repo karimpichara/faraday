@@ -1080,4 +1080,71 @@ input[type="file"] {
 #char-counter {
     font-weight: 500;
     font-size: 0.85rem;
+}
+
+/* No image footer indicator */
+.no-image-footer {
+    display: inline-block;
+}
+
+.no-image-indicator {
+    font-size: 0.65rem;
+    color: #adb5bd;
+    font-weight: 400;
+    opacity: 0.7;
+    font-style: italic;
+}
+
+/* Search form spacing improvements */
+.search-header {
+    margin-bottom: 2rem;
+}
+
+.search-header h2 {
+    margin-bottom: 0.5rem;
+}
+
+.search-header p {
+    margin-bottom: 0;
+    color: #666;
+    font-size: 0.95rem;
+}
+
+/* Button size improvements */
+.btn-small {
+    padding: 0.4rem 0.8rem !important;
+    font-size: 0.8rem !important;
+    line-height: 1.2 !important;
+}
+
+/* Remove weird lines from order headers */
+.orden-header {
+    border: none !important;
+    border-right: none !important;
+}
+
+.orden-codigo {
+    border: none !important;
+    border-right: none !important;
+}
+
+/* Add more space above navigation */
+.navigation-section {
+    margin-top: 3rem;
+    padding-top: 2rem;
+}
+
+/* Admin badge styling */
+.admin-badge {
+    background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    margin-left: 0.5rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    box-shadow: 0 2px 4px rgba(255, 107, 107, 0.3);
 } 

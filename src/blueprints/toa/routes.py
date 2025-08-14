@@ -517,15 +517,145 @@ def serve_comentario_image(comentario_id):
         if not comentario.orden_trabajo:
             abort(404)
 
-        user_empresa_ids = [empresa.id for empresa in current_user.empresas]
-        if comentario.orden_trabajo.id_empresa not in user_empresa_ids:
-            abort(403)  # Forbidden
+        # Check if user is admin (dev user or has admin role)
+        is_admin = current_user.username == "dev" or current_user.has_roles(["admin"])
+
+        # Admin users have access to all images, regular users need validation
+        if not is_admin:
+            user_empresa_ids = [empresa.id for empresa in current_user.empresas]
+            if comentario.orden_trabajo.id_empresa not in user_empresa_ids:
+                abort(403)  # Forbidden
+
+        # Properly join the image path with the ROOT_PATH
+        from src.constants import ROOT_PATH
+
+        if os.path.isabs(comentario.imagen_path):
+            # If it's already an absolute path, use it as is
+            full_image_path = comentario.imagen_path
+        else:
+            # Join relative path with ROOT_PATH
+            full_image_path = os.path.join(ROOT_PATH, comentario.imagen_path)
 
         # Check if image file exists
-        if not os.path.exists(comentario.imagen_path):
+        if not os.path.exists(full_image_path):
             abort(404)
 
-        return send_file(comentario.imagen_path)
+        return send_file(full_image_path)
 
     except Exception:
         abort(404)
+
+
+@toa_bp.route("/ordenes/comentarios", methods=["GET"])
+@login_required
+def list_ordenes_comentarios():
+    """
+    List ordenes de trabajo with pagination and search functionality.
+    Users can search and select ordenes to view their comentarios.
+    """
+    try:
+        # Get search parameters
+        page = request.args.get("page", 1, type=int)
+        search_codigo = request.args.get("codigo", "").strip()
+        search_fecha_inicio = request.args.get("fecha_inicio", "").strip()
+        search_fecha_fin = request.args.get("fecha_fin", "").strip()
+        search_empresa_id = request.args.get("empresa_id", type=int)
+
+        # Clear empty search parameters
+        search_codigo = search_codigo if search_codigo else None
+        search_fecha_inicio = search_fecha_inicio if search_fecha_inicio else None
+        search_fecha_fin = search_fecha_fin if search_fecha_fin else None
+
+        # Check if user is admin (dev user or has admin role)
+        is_admin = current_user.username == "dev" or current_user.has_roles(["admin"])
+
+        if is_admin:
+            # Admin users see ALL ordenes and can filter by empresa
+            result = services.orden_trabajo.get_ordenes_trabajo_admin(
+                page=page,
+                per_page=10,
+                search_codigo=search_codigo,
+                search_fecha_inicio=search_fecha_inicio,
+                search_fecha_fin=search_fecha_fin,
+                search_empresa_id=search_empresa_id,
+            )
+            # Get all empresas for admin filtering
+            all_empresas = services.user.get_all_empresas()
+        else:
+            # Regular users see only their empresa's ordenes
+            user_empresa_ids = [empresa.id for empresa in current_user.empresas]
+            result = services.orden_trabajo.get_ordenes_trabajo_by_user_empresas(
+                user_empresa_ids=user_empresa_ids,
+                page=page,
+                per_page=10,
+                search_codigo=search_codigo,
+                search_fecha_inicio=search_fecha_inicio,
+                search_fecha_fin=search_fecha_fin,
+            )
+            all_empresas = None
+
+        return render_template(
+            "list_ordenes_comentarios.html",
+            username=current_user.username,
+            ordenes=result["ordenes"],
+            pagination=result["pagination"],
+            search_filters=result["search_filters"],
+            is_admin=is_admin,
+            all_empresas=all_empresas,
+        )
+
+    except Exception as e:
+        return _handle_route_error(e, MAIN_WELCOME_ROUTE, "list_ordenes_comentarios")
+
+
+@toa_bp.route("/ordenes/<codigo>/comentarios", methods=["GET"])
+@login_required
+def view_orden_comentarios(codigo):
+    """
+    View all comentarios for a specific orden de trabajo.
+    Shows comentarios with their photos if available.
+    """
+    try:
+        # Get orden de trabajo and validate user access
+        orden_trabajo = services.comentarios_use_case.get_orden_trabajo_by_codigo(
+            codigo
+        )
+
+        # Check if user is admin (dev user or has admin role)
+        is_admin = current_user.username == "dev" or current_user.has_roles(["admin"])
+
+        if not orden_trabajo:
+            raise ValueError(f"Orden de trabajo '{codigo}' no encontrada")
+
+        # Admin users have access to all ordenes, regular users need validation
+        if (
+            not is_admin
+            and not services.comentarios_use_case.validate_user_access_to_orden(
+                current_user, orden_trabajo
+            )
+        ):
+            raise ValueError(
+                f"Orden de trabajo '{codigo}' no encontrada o el usuario no tiene acceso"
+            )
+
+        # Get comentarios directly from service (returns raw model objects with datetime)
+        comentarios = services.comentarios.get_comentarios_by_orden_trabajo(
+            orden_trabajo.id
+        )
+
+        return render_template(
+            "view_orden_comentarios.html",
+            username=current_user.username,
+            orden_trabajo=orden_trabajo,
+            comentarios=comentarios,
+        )
+
+    except ValueError as e:
+        # Order not found or access denied
+        flash(str(e), "error")
+        return redirect(url_for("toa.list_ordenes_comentarios"))
+
+    except Exception as e:
+        return _handle_route_error(
+            e, "toa.list_ordenes_comentarios", "view_orden_comentarios"
+        )

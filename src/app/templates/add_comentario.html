@@ -153,7 +153,7 @@
         function updateCounter() {
             const remaining = maxLength - textarea.value.length;
             charCounter.textContent = `${textarea.value.length}/${maxLength}`;
-            charCounter.style.color = remaining < 20 ? '#e74c3c' : '#666';
+            charCounter.style.color = remaining < 10 ? '#e74c3c' : '#666';
         }
 
         textarea.addEventListener('input', updateCounter);

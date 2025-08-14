@@ -1,0 +1,573 @@
+{% extends "_base.html" %}
+
+{% block title %}Comentarios - {{ orden_trabajo.codigo }} - Control de TOA{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="content-wrapper">
+        <div class="page-header">
+            <h1><span class="emoji">💬</span> Comentarios de la Orden de Trabajo</h1>
+            <p class="page-subtitle">
+                <strong>Código:</strong> {{ orden_trabajo.codigo }}
+                <span class="separator">•</span>
+                <strong>Total:</strong> {{ comentarios|length }} comentario(s)
+            </p>
+        </div>
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="flash-messages">
+            {% for category, message in messages %}
+            <div class="flash-message flash-{{ category }}">
+                <span class="flash-text">{{ message }}</span>
+                <button class="flash-close" onclick="this.parentElement.style.display='none'"
+                    aria-label="Cerrar mensaje">
+                    ✕
+                </button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        <!-- Action Bar -->
+        <div class="action-bar">
+            <div class="action-info">
+                <span class="badge">{{ comentarios|length }} comentario(s)</span>
+                {% if comentarios %}
+                <span class="last-updated">
+                    Último comentario: {{ comentarios[0].created_at.strftime('%d/%m/%Y %H:%M') }}
+                </span>
+                {% endif %}
+            </div>
+            <div class="action-buttons">
+                <a href="{{ url_for('toa.manage_comentarios', codigo_orden_trabajo=orden_trabajo.codigo) }}"
+                    class="btn btn-primary">
+                    ➕ Agregar Comentario
+                </a>
+                <a href="{{ url_for('toa.list_ordenes_comentarios') }}" class="btn btn-secondary">
+                    ↩️ Volver a la Lista
+                </a>
+            </div>
+        </div>
+
+        <!-- Comentarios Section -->
+        {% if comentarios %}
+        <div class="comentarios-container">
+            {% for comentario in comentarios %}
+            <div class="comentario-card">
+                <div class="comentario-header">
+                    <div class="comentario-meta">
+                        <span class="comentario-ticket">
+                            <span class="ticket-icon">🎫</span>
+                            {{ comentario.num_ticket }}
+                        </span>
+                        <span class="comentario-date">
+                            {{ comentario.created_at.strftime('%d/%m/%Y %H:%M') }}
+                        </span>
+                        <span class="comentario-user">
+                            <span class="user-icon">👤</span>
+                            Usuario ID: {{ comentario.id_usuario }}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="comentario-content">
+                    <div class="comentario-text">
+                        <p>{{ comentario.comentario }}</p>
+                    </div>
+
+                    <!-- Image Section -->
+                    {% if comentario.imagen_path %}
+                    <div class="comentario-image">
+                        <div class="image-container">
+                            <img src="{{ url_for('toa.serve_comentario_image', comentario_id=comentario.id) }}"
+                                alt="Imagen del comentario" class="comentario-img" onclick="openImageModal(this)"
+                                loading="lazy">
+                            <div class="image-overlay">
+                                <span class="image-filename">
+                                    📷 {{ comentario.imagen_original_name or 'imagen.jpg' }}
+                                </span>
+                                <button class="image-zoom-btn"
+                                    onclick="openImageModal(this.previousElementSibling.previousElementSibling)">
+                                    🔍 Ver en grande
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="comentario-footer">
+                    <div class="comentario-id">
+                        ID: {{ comentario.id }}
+                    </div>
+                    {% if not comentario.imagen_path %}
+                    <div class="no-image-footer">
+                        <span class="no-image-indicator">Sin imagen</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <!-- Empty State -->
+        <div class="empty-state">
+            <div class="empty-icon">📭</div>
+            <h3>No hay comentarios</h3>
+            <p>Esta orden de trabajo aún no tiene comentarios registrados.</p>
+            <a href="{{ url_for('toa.manage_comentarios', codigo_orden_trabajo=orden_trabajo.codigo) }}"
+                class="btn btn-primary">
+                ➕ Agregar el Primer Comentario
+            </a>
+        </div>
+        {% endif %}
+
+        <!-- Navigation Section -->
+        <div class="navigation-section">
+            <a href="{{ url_for('toa.list_ordenes_comentarios') }}" class="btn btn-secondary">
+                ↩️ Volver a Órdenes de Trabajo
+            </a>
+            <a href="{{ url_for('main.welcome') }}" class="btn btn-outline">
+                🏠 Ir al Inicio
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Image Modal -->
+<div id="imageModal" class="image-modal" onclick="closeImageModal()">
+    <div class="image-modal-content">
+        <span class="image-modal-close" onclick="closeImageModal()">&times;</span>
+        <img id="modalImage" src="" alt="Imagen ampliada">
+        <div class="image-modal-info">
+            <p id="modalImageName"></p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Image modal functionality
+    function openImageModal(imgElement) {
+        const modal = document.getElementById('imageModal');
+        const modalImg = document.getElementById('modalImage');
+        const modalName = document.getElementById('modalImageName');
+
+        modal.style.display = 'flex';
+        modalImg.src = imgElement.src;
+        modalName.textContent = imgElement.alt;
+
+        // Prevent body scroll when modal is open
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeImageModal() {
+        const modal = document.getElementById('imageModal');
+        modal.style.display = 'none';
+
+        // Restore body scroll
+        document.body.style.overflow = 'auto';
+    }
+
+    // Close modal with Escape key
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') {
+            closeImageModal();
+        }
+    });
+
+    // Prevent modal close when clicking on the image itself
+    document.getElementById('modalImage').addEventListener('click', function (e) {
+        e.stopPropagation();
+    });
+
+    // Lazy loading enhancement
+    document.addEventListener('DOMContentLoaded', function () {
+        const images = document.querySelectorAll('.comentario-img');
+
+        // Add loading states
+        images.forEach(img => {
+            img.addEventListener('load', function () {
+                this.classList.add('loaded');
+            });
+
+            img.addEventListener('error', function () {
+                this.classList.add('error');
+                this.alt = 'Error al cargar la imagen';
+            });
+        });
+    });
+
+    // Auto-refresh functionality (optional)
+    function refreshComentarios() {
+        // Optionally implement auto-refresh
+        // location.reload();
+    }
+
+    // Image error handling
+    function handleImageError(img) {
+        img.style.display = 'none';
+        const container = img.closest('.image-container');
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'image-error';
+        errorDiv.innerHTML = `
+            <span class="error-icon">⚠️</span>
+            <span class="error-text">Error al cargar la imagen</span>
+        `;
+        container.appendChild(errorDiv);
+    }
+
+    // Add error handling to all images
+    document.querySelectorAll('.comentario-img').forEach(img => {
+        img.addEventListener('error', function () {
+            handleImageError(this);
+        });
+    });
+</script>
+
+<style>
+    /* Additional styles for comentarios view */
+    .action-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: #f8f9fa;
+        padding: 15px 20px;
+        border-radius: 8px;
+        margin-bottom: 30px;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+
+    .action-info {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 10px;
+    }
+
+    .last-updated {
+        font-size: 0.9em;
+        color: #666;
+    }
+
+    .separator {
+        color: #ccc;
+        margin: 0 8px;
+    }
+
+    .comentarios-container {
+        display: flex;
+        flex-direction: column;
+        gap: 25px;
+    }
+
+    .comentario-card {
+        background: white;
+        border: 1px solid #e9ecef;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        transition: box-shadow 0.3s ease;
+    }
+
+    .comentario-card:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .comentario-header {
+        background: #f8f9fa;
+        padding: 15px 20px;
+        border-bottom: 1px solid #e9ecef;
+    }
+
+    .comentario-meta {
+        display: flex;
+        gap: 20px;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .comentario-ticket {
+        background: #e3f2fd;
+        color: #1976d2;
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-weight: 500;
+        font-size: 0.9em;
+    }
+
+    .comentario-date {
+        color: #666;
+        font-size: 0.9em;
+    }
+
+    .comentario-user {
+        color: #666;
+        font-size: 0.9em;
+    }
+
+    .ticket-icon,
+    .user-icon {
+        margin-right: 4px;
+    }
+
+    .comentario-content {
+        padding: 20px;
+    }
+
+    .comentario-text {
+        margin-bottom: 20px;
+    }
+
+    .comentario-text p {
+        margin: 0;
+        line-height: 1.6;
+        color: #333;
+        font-size: 1em;
+    }
+
+    .comentario-image {
+        margin-top: 15px;
+    }
+
+    .image-container {
+        position: relative;
+        display: inline-block;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        max-width: 100%;
+    }
+
+    .comentario-img {
+        max-width: 100%;
+        max-height: 400px;
+        height: auto;
+        display: block;
+        cursor: pointer;
+        transition: transform 0.2s ease;
+    }
+
+    .comentario-img:hover {
+        transform: scale(1.02);
+    }
+
+    .comentario-img.loaded {
+        opacity: 1;
+    }
+
+    .comentario-img.error {
+        display: none;
+    }
+
+    .image-overlay {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: linear-gradient(transparent, rgba(0, 0, 0, 0.7));
+        color: white;
+        padding: 15px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .image-container:hover .image-overlay {
+        opacity: 1;
+    }
+
+    .image-filename {
+        font-size: 0.85em;
+        flex-grow: 1;
+    }
+
+    .image-zoom-btn {
+        background: rgba(255, 255, 255, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        color: white;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 0.8em;
+        cursor: pointer;
+        transition: background 0.2s ease;
+    }
+
+    .image-zoom-btn:hover {
+        background: rgba(255, 255, 255, 0.3);
+    }
+
+    .no-image {
+        background: #f8f9fa;
+        border: 2px dashed #dee2e6;
+        padding: 20px;
+        text-align: center;
+        border-radius: 8px;
+        color: #6c757d;
+    }
+
+    .no-image-icon {
+        font-size: 2em;
+        display: block;
+        margin-bottom: 5px;
+    }
+
+    .no-image-text {
+        font-size: 0.9em;
+    }
+
+    .comentario-footer {
+        padding: 10px 20px;
+        background: #f8f9fa;
+        border-top: 1px solid #e9ecef;
+        text-align: right;
+    }
+
+    .comentario-id {
+        font-size: 0.8em;
+        color: #999;
+    }
+
+    .navigation-section {
+        margin-top: 40px;
+        padding-top: 20px;
+        border-top: 1px solid #e9ecef;
+        display: flex;
+        gap: 15px;
+        justify-content: flex-start;
+    }
+
+    /* Image Modal Styles */
+    .image-modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.9);
+        justify-content: center;
+        align-items: center;
+    }
+
+    .image-modal-content {
+        position: relative;
+        max-width: 90%;
+        max-height: 90%;
+        text-align: center;
+    }
+
+    .image-modal-close {
+        position: absolute;
+        top: -40px;
+        right: 0;
+        color: white;
+        font-size: 30px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: color 0.3s ease;
+    }
+
+    .image-modal-close:hover {
+        color: #ccc;
+    }
+
+    #modalImage {
+        max-width: 100%;
+        max-height: 80vh;
+        width: auto;
+        height: auto;
+        border-radius: 8px;
+    }
+
+    .image-modal-info {
+        color: white;
+        margin-top: 15px;
+        font-size: 0.9em;
+    }
+
+    .image-error {
+        background: #f8d7da;
+        color: #721c24;
+        padding: 15px;
+        border-radius: 8px;
+        text-align: center;
+    }
+
+    .error-icon {
+        font-size: 1.2em;
+        margin-right: 5px;
+    }
+
+    .btn-outline {
+        background: transparent;
+        border: 1px solid #dee2e6;
+        color: #495057;
+    }
+
+    .btn-outline:hover {
+        background: #f8f9fa;
+        text-decoration: none;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .action-bar {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .action-buttons {
+            justify-content: space-between;
+        }
+
+        .comentario-meta {
+            gap: 10px;
+        }
+
+        .comentario-content {
+            padding: 15px;
+        }
+
+        .navigation-section {
+            flex-direction: column;
+        }
+
+        .image-modal-content {
+            max-width: 95%;
+            max-height: 95%;
+        }
+
+        .image-modal-close {
+            top: -35px;
+            font-size: 25px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .comentario-meta {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 8px;
+        }
+
+        .action-info {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 8px;
+        }
+    }
+</style>
+{% endblock %}
