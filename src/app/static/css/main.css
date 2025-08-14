@@ -1080,4 +1080,17 @@ input[type="file"] {
 #char-counter {
     font-weight: 500;
     font-size: 0.85rem;
+}
+
+/* No image footer indicator */
+.no-image-footer {
+    display: inline-block;
+}
+
+.no-image-indicator {
+    font-size: 0.65rem;
+    color: #adb5bd;
+    font-weight: 400;
+    opacity: 0.7;
+    font-style: italic;
 } 

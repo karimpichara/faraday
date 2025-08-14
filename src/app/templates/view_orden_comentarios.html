@@ -96,11 +96,6 @@
                             </div>
                         </div>
                     </div>
-                    {% else %}
-                    <div class="no-image">
-                        <span class="no-image-icon">📷</span>
-                        <span class="no-image-text">Sin imagen adjunta</span>
-                    </div>
                     {% endif %}
                 </div>
 
@@ -108,6 +103,11 @@
                     <div class="comentario-id">
                         ID: {{ comentario.id }}
                     </div>
+                    {% if not comentario.imagen_path %}
+                    <div class="no-image-footer">
+                        <span class="no-image-indicator">Sin imagen</span>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
             {% endfor %}
