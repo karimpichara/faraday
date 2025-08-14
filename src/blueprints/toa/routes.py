@@ -3,6 +3,7 @@ import os
 from flask import (
     Blueprint,
     abort,
+    current_app,
     flash,
     jsonify,
     redirect,
@@ -527,7 +528,23 @@ def serve_comentario_image(comentario_id):
         # Admin users have access to all images, regular users need validation
         if not is_admin:
             user_empresa_ids = [empresa.id for empresa in current_user.empresas]
+
+            # Additional security: ensure user has at least one empresa assigned
+            if not user_empresa_ids:
+                # Log security event - user with no empresa assignments trying to access images
+                current_app.logger.warning(
+                    f"User {current_user.username} (ID: {current_user.id}) attempted to access "
+                    f"image for comentario {comentario_id} but has no empresa assignments"
+                )
+                abort(403)  # User not assigned to any empresa
+
             if comentario.orden_trabajo.id_empresa not in user_empresa_ids:
+                # Log potential unauthorized access attempt
+                current_app.logger.warning(
+                    f"User {current_user.username} (ID: {current_user.id}) attempted to access "
+                    f"image for comentario {comentario_id} from empresa {comentario.orden_trabajo.id_empresa} "
+                    f"but only has access to empresas: {user_empresa_ids}"
+                )
                 abort(403)  # Forbidden
 
         # Properly join the image path with the ROOT_PATH
@@ -588,15 +605,40 @@ def list_ordenes_comentarios():
         else:
             # Regular users see only their empresa's ordenes
             user_empresa_ids = [empresa.id for empresa in current_user.empresas]
-            result = services.orden_trabajo.get_ordenes_trabajo_by_user_empresas(
-                user_empresa_ids=user_empresa_ids,
-                page=page,
-                per_page=10,
-                search_codigo=search_codigo,
-                search_fecha_inicio=search_fecha_inicio,
-                search_fecha_fin=search_fecha_fin,
-            )
-            all_empresas = None
+
+            # Security check: ensure user has empresa assignments
+            if not user_empresa_ids:
+                current_app.logger.warning(
+                    f"User {current_user.username} (ID: {current_user.id}) attempted to access "
+                    f"ordenes list but has no empresa assignments"
+                )
+                # Return empty result for users with no empresa assignments
+                result = type(
+                    "obj",
+                    (object,),
+                    {
+                        "items": [],
+                        "page": 1,
+                        "pages": 0,
+                        "per_page": 10,
+                        "total": 0,
+                        "prev_num": None,
+                        "next_num": None,
+                        "has_prev": False,
+                        "has_next": False,
+                    },
+                )()
+                all_empresas = None
+            else:
+                result = services.orden_trabajo.get_ordenes_trabajo_by_user_empresas(
+                    user_empresa_ids=user_empresa_ids,
+                    page=page,
+                    per_page=10,
+                    search_codigo=search_codigo,
+                    search_fecha_inicio=search_fecha_inicio,
+                    search_fecha_fin=search_fecha_fin,
+                )
+                all_empresas = None
 
         return render_template(
             "list_ordenes_comentarios.html",

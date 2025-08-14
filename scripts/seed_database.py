@@ -397,7 +397,9 @@ class DatabaseSeeder:
                 imagen_original_name = None
                 if random.random() < 0.3 and self.available_images:
                     image_file = random.choice(self.available_images)
-                    imagen_path = f"uploads/comentarios/testing/{image_file}"
+                    # Use proper path joining instead of string formatting
+                    from src.constants import get_upload_path
+                    imagen_path = get_upload_path("comentarios", "testing", image_file)
                     imagen_original_name = image_file
 
                 comentario = Comentario(

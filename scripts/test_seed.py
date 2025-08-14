@@ -39,26 +39,26 @@ def test_database_connection():
 def test_tables_exist():
     """Test that required tables exist."""
     print("📋 Verificando que las tablas existen...")
-    
+
     required_tables = [
         "empresas_externas_toa",
-        "users", 
+        "users",
         "roles",
         "user_roles",
         "user_empresas",
         "tecnicos_supervisores",
         "ordenes_trabajo",
         "comentarios",
-        "historia_ot_empresas"
+        "historia_ot_empresas",
     ]
-    
+
     try:
         app = create_app()
         with app.app_context():
             # Get all table names
             inspector = db.inspect(db.engine)
             existing_tables = inspector.get_table_names()
-            
+
             missing_tables = []
             for table in required_tables:
                 if table in existing_tables:
@@ -66,7 +66,7 @@ def test_tables_exist():
                 else:
                     print(f"   ❌ Tabla faltante: {table}")
                     missing_tables.append(table)
-            
+
             if missing_tables:
                 print(f"\n⚠️  Faltan las siguientes tablas: {', '.join(missing_tables)}")
                 print("   Ejecuta las migraciones con: flask db upgrade")
@@ -74,7 +74,7 @@ def test_tables_exist():
             else:
                 print("✅ Todas las tablas requeridas existen")
                 return True
-                
+
     except Exception as e:
         print(f"❌ Error verificando tablas: {str(e)}")
         return False
@@ -83,18 +83,23 @@ def test_tables_exist():
 def test_uploads_folder():
     """Test that uploads folder and images exist."""
     print("📁 Verificando carpeta de uploads...")
-    
-    uploads_path = project_root / "uploads" / "comentarios"
-    
+
+    from src.constants import COMENTARIOS_UPLOAD_PATH
+
+    uploads_path = Path(COMENTARIOS_UPLOAD_PATH)
+
     if not uploads_path.exists():
         print(f"❌ Carpeta de uploads no existe: {uploads_path}")
         return False
-    
+
     # Check for images
-    image_extensions = ['.jpg', '.jpeg', '.png', '.gif']
-    images = [f for f in uploads_path.iterdir() 
-             if f.is_file() and f.suffix.lower() in image_extensions]
-    
+    image_extensions = [".jpg", ".jpeg", ".png", ".gif"]
+    images = [
+        f
+        for f in uploads_path.iterdir()
+        if f.is_file() and f.suffix.lower() in image_extensions
+    ]
+
     if images:
         print(f"✅ Carpeta de uploads encontrada con {len(images)} imágenes")
         print(f"   Ruta: {uploads_path}")
@@ -114,7 +119,7 @@ def test_uploads_folder():
 def test_required_roles():
     """Test that required roles exist or can be created."""
     print("👥 Verificando roles...")
-    
+
     try:
         app = create_app()
         with app.app_context():
@@ -123,7 +128,7 @@ def test_required_roles():
                 print("✅ Rol 'supervisor' ya existe")
             else:
                 print("⚠️  Rol 'supervisor' no existe, será creado durante el seeding")
-            
+
             return True
     except Exception as e:
         print(f"❌ Error verificando roles: {str(e)}")
@@ -133,7 +138,7 @@ def test_required_roles():
 def test_import_dependencies():
     """Test that all required imports work."""
     print("📦 Verificando dependencias de Python...")
-    
+
     try:
         # Test all the imports the seeding script uses
         from src.models.auth.user import Role, User, UserEmpresa, UserRole
@@ -142,7 +147,7 @@ def test_import_dependencies():
         from src.models.historia_ot_empresas import HistoriaOtEmpresas
         from src.models.orden_trabajo import OrdenTrabajo
         from src.models.tecnico_supervisor import TecnicoSupervisor
-        
+
         print("✅ Todas las dependencias están disponibles")
         return True
     except ImportError as e:
@@ -154,7 +159,7 @@ def run_all_tests():
     """Run all validation tests."""
     print("🧪 VALIDACIÓN DE ENTORNO PARA SEEDING")
     print("=" * 50)
-    
+
     tests = [
         ("Conexión a base de datos", test_database_connection),
         ("Tablas de base de datos", test_tables_exist),
@@ -162,24 +167,24 @@ def run_all_tests():
         ("Roles requeridos", test_required_roles),
         ("Dependencias Python", test_import_dependencies),
     ]
-    
+
     results = []
     for test_name, test_func in tests:
         print(f"\n🔍 {test_name}:")
         success = test_func()
         results.append((test_name, success))
-    
+
     print("\n" + "=" * 50)
     print("📊 RESUMEN DE VALIDACIÓN")
     print("=" * 50)
-    
+
     all_passed = True
     for test_name, success in results:
         status = "✅ PASS" if success else "❌ FAIL"
         print(f"{status} - {test_name}")
         if not success:
             all_passed = False
-    
+
     print("\n" + "=" * 50)
     if all_passed:
         print("🎉 TODOS LOS TESTS PASARON")
@@ -189,7 +194,7 @@ def run_all_tests():
     else:
         print("⚠️  ALGUNOS TESTS FALLARON")
         print("❌ Corrige los errores antes de ejecutar el seeding")
-    
+
     return all_passed
 
 

@@ -11,6 +11,8 @@ from typing import Optional
 from PIL import Image, ImageOps
 from werkzeug.datastructures import FileStorage
 
+from src.constants import COMENTARIOS_UPLOAD_PATH
+
 
 class ImageProcessor:
     """Handles image processing for comment attachments."""
@@ -25,7 +27,7 @@ class ImageProcessor:
     COMPRESSION_QUALITY = 85
 
     # Storage configuration
-    UPLOAD_FOLDER = os.path.join("uploads", "comentarios")
+    UPLOAD_FOLDER = COMENTARIOS_UPLOAD_PATH
 
     def __init__(self, upload_folder: str = None):
         """Initialize the image processor."""
