@@ -177,7 +177,7 @@ def set_empresas_externas_toa():
 
 
 @toa_bp.route("/get_empresas_externas", methods=["GET"])
-@require_token()
+@require_basic_auth()
 def get_empresas_externas_toa():
     """
     Get all EmpresasExternasToa records.
@@ -231,7 +231,7 @@ def add_ordenes_trabajo():
 
 
 @toa_bp.route("/comentarios", methods=["GET"])
-@require_token()
+@require_basic_auth()
 def get_all_comentarios():
     """
     Get all comentarios from the system.
@@ -312,7 +312,7 @@ def get_all_ordenes_trabajo():
 
 
 @toa_bp.route("/users", methods=["GET"])
-@require_token()
+@require_basic_auth()
 def get_all_users():
     """
     Get all users from the system.
