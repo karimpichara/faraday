@@ -203,6 +203,8 @@ class ComentariosUseCase:
                     "num_ticket": comentario.num_ticket,
                     "created_at": comentario.created_at.isoformat(),
                     "id_usuario": comentario.id_usuario,
+                    "imagen_path": comentario.imagen_path,
+                    "imagen_original_name": comentario.imagen_original_name,
                 }
                 for comentario in comentarios
             ],

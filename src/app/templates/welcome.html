@@ -39,6 +39,15 @@
             </div>
         </a>
 
+        <a href="{{ url_for('toa.list_ordenes_comentarios') }}" class="feature-card active">
+            <div class="feature-icon">💬</div>
+            <div class="feature-content">
+                <h3 class="feature-title">Ver comentarios por órdenes de trabajo</h3>
+                <p class="feature-description">Busca y visualiza comentarios con fotos de todas tus órdenes de trabajo
+                </p>
+            </div>
+        </a>
+
         {% if username == 'dev' %}
         <a href="{{ url_for('main.manage_users') }}" class="feature-card active dev-only">
             <div class="feature-icon">👤</div>
