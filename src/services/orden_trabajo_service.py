@@ -108,7 +108,7 @@ class OrdenTrabajoService:
         self,
         user_empresa_ids: list[int],
         page: int = 1,
-        per_page: int = 20,
+        per_page: int = 10,
         search_codigo: str = None,
         search_fecha_inicio: str = None,
         search_fecha_fin: str = None,
@@ -130,7 +130,7 @@ class OrdenTrabajoService:
         from datetime import datetime
 
         # Ensure per_page doesn't exceed maximum
-        per_page = min(per_page, 20)
+        per_page = min(per_page, 10)
 
         # Base query filtered by user's empresas
         query = OrdenTrabajo.active_records().filter(
@@ -181,5 +181,89 @@ class OrdenTrabajoService:
                 "codigo": search_codigo,
                 "fecha_inicio": search_fecha_inicio,
                 "fecha_fin": search_fecha_fin,
+            },
+        }
+
+    def get_ordenes_trabajo_admin(
+        self,
+        page: int = 1,
+        per_page: int = 10,
+        search_codigo: str = None,
+        search_fecha_inicio: str = None,
+        search_fecha_fin: str = None,
+        search_empresa_id: int = None,
+    ) -> dict[str, Any]:
+        """
+        Get ALL ordenes de trabajo with pagination and search filters for admin users.
+        Admins can see all ordenes and filter by empresa.
+
+        Args:
+            page: Page number (1-indexed)
+            per_page: Number of records per page (max 20)
+            search_codigo: Optional codigo filter
+            search_fecha_inicio: Optional start date filter (YYYY-MM-DD)
+            search_fecha_fin: Optional end date filter (YYYY-MM-DD)
+            search_empresa_id: Optional empresa filter (admin only)
+
+        Returns:
+            Dictionary with paginated results and metadata
+        """
+        from datetime import datetime
+
+        # Ensure per_page doesn't exceed maximum
+        per_page = min(per_page, 10)
+
+        # Base query - NO empresa filtering for admin
+        query = OrdenTrabajo.active_records()
+
+        # Apply search filters
+        if search_codigo:
+            query = query.filter(OrdenTrabajo.codigo.ilike(f"%{search_codigo}%"))
+
+        if search_fecha_inicio:
+            try:
+                fecha_inicio = datetime.strptime(search_fecha_inicio, "%Y-%m-%d")
+                query = query.filter(OrdenTrabajo.created_at >= fecha_inicio)
+            except ValueError:
+                pass  # Invalid date format, ignore filter
+
+        if search_fecha_fin:
+            try:
+                fecha_fin = datetime.strptime(search_fecha_fin, "%Y-%m-%d")
+                # Add one day to include the entire end date
+                from datetime import timedelta
+
+                fecha_fin = fecha_fin + timedelta(days=1)
+                query = query.filter(OrdenTrabajo.created_at < fecha_fin)
+            except ValueError:
+                pass  # Invalid date format, ignore filter
+
+        # Admin-specific: filter by empresa if specified
+        if search_empresa_id:
+            query = query.filter(OrdenTrabajo.id_empresa == search_empresa_id)
+
+        # Order by most recent first
+        query = query.order_by(OrdenTrabajo.created_at.desc())
+
+        # Apply pagination
+        pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+
+        return {
+            "ordenes": pagination.items,
+            "pagination": {
+                "page": page,
+                "per_page": per_page,
+                "total": pagination.total,
+                "pages": pagination.pages,
+                "has_prev": pagination.has_prev,
+                "has_next": pagination.has_next,
+                "prev_num": pagination.prev_num,
+                "next_num": pagination.next_num,
+            },
+            "search_filters": {
+                "codigo": search_codigo,
+                "fecha_inicio": search_fecha_inicio,
+                "fecha_fin": search_fecha_fin,
+                "empresa_id": search_empresa_id,
             },
         }

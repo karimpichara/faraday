@@ -517,9 +517,14 @@ def serve_comentario_image(comentario_id):
         if not comentario.orden_trabajo:
             abort(404)
 
-        user_empresa_ids = [empresa.id for empresa in current_user.empresas]
-        if comentario.orden_trabajo.id_empresa not in user_empresa_ids:
-            abort(403)  # Forbidden
+        # Check if user is admin (dev user or has admin role)
+        is_admin = current_user.username == "dev" or current_user.has_roles(["admin"])
+
+        # Admin users have access to all images, regular users need validation
+        if not is_admin:
+            user_empresa_ids = [empresa.id for empresa in current_user.empresas]
+            if comentario.orden_trabajo.id_empresa not in user_empresa_ids:
+                abort(403)  # Forbidden
 
         # Properly join the image path with the ROOT_PATH
         from src.constants import ROOT_PATH
@@ -554,24 +559,40 @@ def list_ordenes_comentarios():
         search_codigo = request.args.get("codigo", "").strip()
         search_fecha_inicio = request.args.get("fecha_inicio", "").strip()
         search_fecha_fin = request.args.get("fecha_fin", "").strip()
+        search_empresa_id = request.args.get("empresa_id", type=int)
 
         # Clear empty search parameters
         search_codigo = search_codigo if search_codigo else None
         search_fecha_inicio = search_fecha_inicio if search_fecha_inicio else None
         search_fecha_fin = search_fecha_fin if search_fecha_fin else None
 
-        # Get user's empresa IDs
-        user_empresa_ids = [empresa.id for empresa in current_user.empresas]
+        # Check if user is admin (dev user or has admin role)
+        is_admin = current_user.username == "dev" or current_user.has_roles(["admin"])
 
-        # Get paginated ordenes de trabajo
-        result = services.orden_trabajo.get_ordenes_trabajo_by_user_empresas(
-            user_empresa_ids=user_empresa_ids,
-            page=page,
-            per_page=20,
-            search_codigo=search_codigo,
-            search_fecha_inicio=search_fecha_inicio,
-            search_fecha_fin=search_fecha_fin,
-        )
+        if is_admin:
+            # Admin users see ALL ordenes and can filter by empresa
+            result = services.orden_trabajo.get_ordenes_trabajo_admin(
+                page=page,
+                per_page=10,
+                search_codigo=search_codigo,
+                search_fecha_inicio=search_fecha_inicio,
+                search_fecha_fin=search_fecha_fin,
+                search_empresa_id=search_empresa_id,
+            )
+            # Get all empresas for admin filtering
+            all_empresas = services.user.get_all_empresas()
+        else:
+            # Regular users see only their empresa's ordenes
+            user_empresa_ids = [empresa.id for empresa in current_user.empresas]
+            result = services.orden_trabajo.get_ordenes_trabajo_by_user_empresas(
+                user_empresa_ids=user_empresa_ids,
+                page=page,
+                per_page=10,
+                search_codigo=search_codigo,
+                search_fecha_inicio=search_fecha_inicio,
+                search_fecha_fin=search_fecha_fin,
+            )
+            all_empresas = None
 
         return render_template(
             "list_ordenes_comentarios.html",
@@ -579,6 +600,8 @@ def list_ordenes_comentarios():
             ordenes=result["ordenes"],
             pagination=result["pagination"],
             search_filters=result["search_filters"],
+            is_admin=is_admin,
+            all_empresas=all_empresas,
         )
 
     except Exception as e:
@@ -597,9 +620,17 @@ def view_orden_comentarios(codigo):
         orden_trabajo = services.comentarios_use_case.get_orden_trabajo_by_codigo(
             codigo
         )
+
+        # Check if user is admin (dev user or has admin role)
+        is_admin = current_user.username == "dev" or current_user.has_roles(["admin"])
+
+        if not orden_trabajo:
+            raise ValueError(f"Orden de trabajo '{codigo}' no encontrada")
+
+        # Admin users have access to all ordenes, regular users need validation
         if (
-            not orden_trabajo
-            or not services.comentarios_use_case.validate_user_access_to_orden(
+            not is_admin
+            and not services.comentarios_use_case.validate_user_access_to_orden(
                 current_user, orden_trabajo
             )
         ):

@@ -56,6 +56,22 @@
                             value="{{ search_filters.fecha_fin if search_filters.fecha_fin }}">
                         <small class="form-help">Órdenes creadas hasta esta fecha</small>
                     </div>
+
+                    {% if is_admin %}
+                    <div class="form-group">
+                        <label for="empresa_id" class="form-label">Empresa:</label>
+                        <select id="empresa_id" name="empresa_id" class="form-input">
+                            <option value="">Todas las empresas</option>
+                            {% for empresa in all_empresas %}
+                            <option value="{{ empresa.id }}" 
+                                {% if search_filters.empresa_id == empresa.id %}selected{% endif %}>
+                                {{ empresa.nombre }} ({{ empresa.nombre_toa }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <small class="form-help">Filtrar por empresa específica (solo admin)</small>
+                    </div>
+                    {% endif %}
                 </div>
 
                 <div class="search-actions">
@@ -76,12 +92,18 @@
                 <div class="results-info">
                     {% if pagination.total > 0 %}
                     <span class="badge">{{ pagination.total }} orden(es) encontrada(s)</span>
+                    {% if is_admin %}
+                    <span class="admin-badge">👑 Vista Admin</span>
+                    {% endif %}
                     <span class="pagination-info">
                         Página {{ pagination.page }} de {{ pagination.pages }}
                         ({{ ordenes|length }} orden(es) en esta página)
                     </span>
                     {% else %}
                     <span class="badge badge-empty">No se encontraron órdenes</span>
+                    {% if is_admin %}
+                    <span class="admin-badge">👑 Vista Admin</span>
+                    {% endif %}
                     {% endif %}
                 </div>
             </div>
@@ -94,13 +116,11 @@
                     <div class="orden-info">
                         <div class="orden-header">
                             <h4 class="orden-codigo">{{ orden.codigo }}</h4>
+                            {% if orden.empresas_externas_toa %}
                             <span class="orden-empresa">
-                                {% if orden.empresas_externas_toa %}
-                                {{ orden.empresas_externas_toa.empresa }}
-                                {% else %}
-                                Empresa ID: {{ orden.id_empresa }}
-                                {% endif %}
+                                {{ orden.empresas_externas_toa.nombre }}
                             </span>
+                            {% endif %}
                         </div>
                         <div class="orden-details">
                             <div class="detail-item">
@@ -120,7 +140,7 @@
                     <div class="orden-actions">
                         <a href="{{ url_for('toa.view_orden_comentarios', codigo=orden.codigo) }}"
                             class="btn btn-primary btn-small">
-                            👁️ Ver Comentarios
+                            Ver Comentarios
                         </a>
                         <a href="{{ url_for('toa.manage_comentarios', codigo_orden_trabajo=orden.codigo) }}"
                             class="btn btn-secondary btn-small">
@@ -141,7 +161,8 @@
                                        page=pagination.prev_num,
                                        codigo=search_filters.codigo,
                                        fecha_inicio=search_filters.fecha_inicio,
-                                       fecha_fin=search_filters.fecha_fin) }}" class="pagination-btn">
+                                       fecha_fin=search_filters.fecha_fin,
+                                       empresa_id=search_filters.empresa_id) }}" class="pagination-btn">
                         ← Anterior
                     </a>
                     {% else %}
@@ -157,7 +178,8 @@
                                            page=page_num,
                                            codigo=search_filters.codigo,
                                            fecha_inicio=search_filters.fecha_inicio,
-                                           fecha_fin=search_filters.fecha_fin) }}" class="pagination-btn">
+                                           fecha_fin=search_filters.fecha_fin,
+                                           empresa_id=search_filters.empresa_id) }}" class="pagination-btn">
                             {{ page_num }}
                             </a>
                             {% elif page_num == 3 and pagination.page > 5 %}
@@ -173,7 +195,8 @@
                                        page=pagination.next_num,
                                        codigo=search_filters.codigo,
                                        fecha_inicio=search_filters.fecha_inicio,
-                                       fecha_fin=search_filters.fecha_fin) }}" class="pagination-btn">
+                                       fecha_fin=search_filters.fecha_fin,
+                                       empresa_id=search_filters.empresa_id) }}" class="pagination-btn">
                                     Siguiente →
                                 </a>
                                 {% else %}
@@ -189,13 +212,13 @@
                 <div class="empty-icon">📭</div>
                 <h3>No se encontraron órdenes de trabajo</h3>
                 <p>
-                    {% if search_filters.codigo or search_filters.fecha_inicio or search_filters.fecha_fin %}
+                    {% if search_filters.codigo or search_filters.fecha_inicio or search_filters.fecha_fin or search_filters.empresa_id %}
                     Intenta ajustar los filtros de búsqueda o limpiar la búsqueda para ver todas las órdenes.
                     {% else %}
-                    No tienes órdenes de trabajo disponibles en este momento.
+                    {% if is_admin %}No hay órdenes de trabajo en el sistema.{% else %}No tienes órdenes de trabajo disponibles en este momento.{% endif %}
                     {% endif %}
                 </p>
-                {% if search_filters.codigo or search_filters.fecha_inicio or search_filters.fecha_fin %}
+                {% if search_filters.codigo or search_filters.fecha_inicio or search_filters.fecha_fin or search_filters.empresa_id %}
                 <a href="{{ url_for('toa.list_ordenes_comentarios') }}" class="btn btn-primary">
                     🗑️ Limpiar Búsqueda
                 </a>

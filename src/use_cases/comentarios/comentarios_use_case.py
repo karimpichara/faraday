@@ -29,6 +29,7 @@ class ComentariosUseCase:
     ) -> bool:
         """
         Validate that the user has access to the empresa associated with the orden de trabajo.
+        Admin users (dev user or users with admin role) have access to all ordenes.
 
         Args:
             user: User instance
@@ -37,6 +38,12 @@ class ComentariosUseCase:
         Returns:
             True if user has access, False otherwise
         """
+        # Check if user is admin (dev user or has admin role)
+        is_admin = user.username == "dev" or user.has_roles(["admin"])
+
+        if is_admin:
+            return True
+
         user_empresa_ids = [empresa.id for empresa in user.empresas]
         return orden_trabajo.id_empresa in user_empresa_ids
 
