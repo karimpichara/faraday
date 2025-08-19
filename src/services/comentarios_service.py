@@ -81,16 +81,17 @@ class ComentariosService:
         self, id_orden_trabajo: int
     ) -> list[Comentario]:
         """
-        Get all comentarios for a specific orden de trabajo.
+        Get all ACTIVE comentarios for a specific orden de trabajo.
 
         Args:
             id_orden_trabajo: Orden de trabajo ID
 
         Returns:
-            List of Comentario instances ordered by creation date (newest first)
+            List of active Comentario instances ordered by creation date (newest first)
         """
         return (
-            Comentario.query.filter_by(id_orden_trabajo=id_orden_trabajo)
+            Comentario.active_records()
+            .filter_by(id_orden_trabajo=id_orden_trabajo)
             .order_by(Comentario.created_at.desc())
             .all()
         )
@@ -109,24 +110,28 @@ class ComentariosService:
 
     def get_comentarios_count_by_orden_trabajo(self, id_orden_trabajo: int) -> int:
         """
-        Get the count of comentarios for a specific orden de trabajo.
+        Get the count of ACTIVE comentarios for a specific orden de trabajo.
 
         Args:
             id_orden_trabajo: Orden de trabajo ID
 
         Returns:
-            Number of comentarios for the orden de trabajo
+            Number of active comentarios for the orden de trabajo
         """
-        return Comentario.query.filter_by(id_orden_trabajo=id_orden_trabajo).count()
+        return (
+            Comentario.active_records()
+            .filter_by(id_orden_trabajo=id_orden_trabajo)
+            .count()
+        )
 
     def get_all_comentarios(self) -> list[Comentario]:
         """
-        Get all comentarios from the system.
+        Get all ACTIVE comentarios from the system.
 
         Returns:
-            List of all Comentario instances ordered by creation date (newest first)
+            List of all active Comentario instances ordered by creation date (newest first)
         """
-        return Comentario.query.order_by(Comentario.created_at.desc()).all()
+        return Comentario.active_records().order_by(Comentario.created_at.desc()).all()
 
     def delete_comentario(self, comentario_id: int) -> bool:
         """
@@ -148,6 +153,88 @@ class ComentariosService:
                 self.image_processor.delete_image(comentario.imagen_path)
 
             db.session.delete(comentario)
+            db.session.commit()
+            return True
+
+        except Exception:
+            db.session.rollback()
+            return False
+
+    def soft_delete_comentario(self, comentario_id: int) -> bool:
+        """
+        Soft delete a comentario (mark as inactive).
+
+        Args:
+            comentario_id: Comentario ID
+
+        Returns:
+            True if soft deleted successfully, False otherwise
+        """
+        try:
+            comentario = Comentario.query.get(comentario_id)
+            if not comentario:
+                return False
+
+            comentario.soft_delete()
+            db.session.commit()
+            return True
+
+        except Exception:
+            db.session.rollback()
+            return False
+
+    def get_all_comentarios_including_inactive(self) -> list[Comentario]:
+        """
+        Get all comentarios from the system including inactive ones.
+
+        Returns:
+            List of all Comentario instances (active and inactive) ordered by creation date
+        """
+        return Comentario.query.order_by(Comentario.created_at.desc()).all()
+
+    def get_comentarios_paginated(self, page: int = 1, per_page: int = 20) -> dict:
+        """
+        Get paginated comentarios including inactive ones.
+
+        Args:
+            page: Page number (1-based)
+            per_page: Number of items per page
+
+        Returns:
+            Dictionary with paginated results
+        """
+        paginated = Comentario.query.order_by(Comentario.created_at.desc()).paginate(
+            page=page, per_page=per_page, error_out=False
+        )
+
+        return {
+            "items": paginated.items,
+            "total": paginated.total,
+            "page": paginated.page,
+            "per_page": paginated.per_page,
+            "pages": paginated.pages,
+            "has_prev": paginated.has_prev,
+            "has_next": paginated.has_next,
+            "prev_num": paginated.prev_num,
+            "next_num": paginated.next_num,
+        }
+
+    def restore_comentario(self, comentario_id: int) -> bool:
+        """
+        Restore a soft deleted comentario.
+
+        Args:
+            comentario_id: Comentario ID
+
+        Returns:
+            True if restored successfully, False otherwise
+        """
+        try:
+            comentario = Comentario.query.get(comentario_id)
+            if not comentario:
+                return False
+
+            comentario.restore()
             db.session.commit()
             return True
 

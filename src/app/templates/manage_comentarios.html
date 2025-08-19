@@ -1,0 +1,221 @@
+{% extends "_base.html" %}
+
+{% block title %}Gestión de Comentarios - Control de TOA{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/manage_users.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/manage_comentarios.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="content-wrapper">
+        <div class="page-header">
+            <h1><span class="emoji">🗑️</span> Gestión de Comentarios</h1>
+            <p class="page-subtitle">Panel de administración exclusivo para usuario 'dev'</p>
+            <div class="dev-only-notice">
+                🔒 Acceso Restringido: Solo el usuario 'dev' puede gestionar comentarios del sistema
+            </div>
+        </div>
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="flash-messages">
+            {% for category, message in messages %}
+            <div class="flash-message flash-{{ category }}">
+                <span class="flash-text">{{ message }}</span>
+                <button class="flash-close" onclick="this.parentElement.style.display='none'"
+                    aria-label="Cerrar mensaje">
+                    ✕
+                </button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        <!-- Statistics -->
+        <div class="stats-container">
+            <div class="stat-card">
+                <div class="stat-number">{{ total }}</div>
+                <div class="stat-label">Total Comentarios</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">{{ active_count }}</div>
+                <div class="stat-label">Activos</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">{{ inactive_count }}</div>
+                <div class="stat-label">Inactivos</div>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div class="results-container">
+            <div class="results-header">
+                <h3>📋 Lista de Comentarios</h3>
+                <div class="results-info">
+                    {% if pagination.total > 0 %}
+                    <span class="badge">{{ pagination.total }} comentario(s) total</span>
+                    <span class="admin-badge">👑 Vista Admin</span>
+                    <span class="pagination-info">
+                        Página {{ pagination.page }} de {{ pagination.pages }}
+                        ({{ comentarios|length }} comentario(s) en esta página)
+                    </span>
+                    {% else %}
+                    <span class="badge badge-empty">No hay comentarios</span>
+                    <span class="admin-badge">👑 Vista Admin</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if comentarios %}
+            <!-- Comentarios List -->
+            <div class="comentarios-list">
+                {% for comentario in comentarios %}
+                <div class="comentario-card {% if not comentario.active %}inactive{% endif %}">
+                    <div class="comentario-info">
+                        <div class="comentario-header">
+                            <h4 class="comentario-id">Comentario #{{ comentario.id }}</h4>
+                            <span
+                                class="comentario-status {% if comentario.active %}status-active{% else %}status-inactive{% endif %}">
+                                {% if comentario.active %}✅ ACTIVO{% else %}❌ INACTIVO{% endif %}
+                            </span>
+                        </div>
+                        <div class="comentario-content">
+                            "{{ comentario.comentario }}"
+                        </div>
+                        <div class="comentario-details">
+                            <div class="detail-item">
+                                <span class="detail-label">Ticket:</span>
+                                <span class="detail-value">{{ comentario.num_ticket }}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Usuario ID:</span>
+                                <span class="detail-value">{{ comentario.id_usuario }}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Orden ID:</span>
+                                <span class="detail-value">{{ comentario.id_orden_trabajo }}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Creado:</span>
+                                <span class="detail-value">{{ comentario.created_at[:19] }}</span>
+                            </div>
+                            {% if comentario.imagen_path %}
+                            <div class="detail-item">
+                                <span class="detail-label">Imagen:</span>
+                                <span class="detail-value badge-small">{{ comentario.imagen_original_name }}</span>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="comentario-actions">
+                        {% if comentario.active %}
+                        <form method="POST"
+                            action="{{ url_for('main.soft_delete_comentario', comentario_id=comentario.id) }}"
+                            style="display: inline;"
+                            onsubmit="return confirm('¿Está seguro de que desea desactivar este comentario?');">
+                            <button type="submit" class="btn btn-danger btn-small">🗑️ Desactivar</button>
+                        </form>
+                        {% else %}
+                        <form method="POST"
+                            action="{{ url_for('main.restore_comentario', comentario_id=comentario.id) }}"
+                            style="display: inline;"
+                            onsubmit="return confirm('¿Está seguro de que desea restaurar este comentario?');">
+                            <button type="submit" class="btn btn-success btn-small">♻️ Restaurar</button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Pagination -->
+            {% if pagination.pages > 1 %}
+            <div class="pagination-container">
+                <div class="pagination">
+                    <!-- Previous button -->
+                    {% if pagination.has_prev %}
+                    <a href="{{ url_for('main.manage_comentarios', page=pagination.prev_num, per_page=pagination.per_page) }}"
+                        class="pagination-btn">
+                        ← Anterior
+                    </a>
+                    {% else %}
+                    <span class="pagination-btn disabled">← Anterior</span>
+                    {% endif %}
+
+                    <!-- Page numbers -->
+                    {% for page_num in range(1, pagination.pages + 1) %}
+                    {% if page_num == pagination.page %}
+                    <span class="pagination-btn active">{{ page_num }}</span>
+                    {% elif (page_num <= 2) or (page_num>= pagination.pages - 1) or (page_num >= pagination.page - 2 and
+                        page_num <= pagination.page + 2) %} <a
+                            href="{{ url_for('main.manage_comentarios', page=page_num, per_page=pagination.per_page) }}"
+                            class="pagination-btn">
+                            {{ page_num }}
+                            </a>
+                            {% elif page_num == 3 and pagination.page > 5 %}
+                            <span class="pagination-ellipsis">...</span>
+                            {% elif page_num == pagination.pages - 2 and pagination.page < pagination.pages - 4 %} <span
+                                class="pagination-ellipsis">...</span>
+                                {% endif %}
+                                {% endfor %}
+
+                                <!-- Next button -->
+                                {% if pagination.has_next %}
+                                <a href="{{ url_for('main.manage_comentarios', page=pagination.next_num, per_page=pagination.per_page) }}"
+                                    class="pagination-btn">
+                                    Siguiente →
+                                </a>
+                                {% else %}
+                                <span class="pagination-btn disabled">Siguiente →</span>
+                                {% endif %}
+                </div>
+
+                <!-- Per Page Selector -->
+                <div class="per-page-selector">
+                    <label for="per-page">Comentarios por página:</label>
+                    <select id="per-page" onchange="changePerPage(this.value)">
+                        <option value="10" {% if pagination.per_page==10 %}selected{% endif %}>10</option>
+                        <option value="20" {% if pagination.per_page==20 %}selected{% endif %}>20</option>
+                        <option value="50" {% if pagination.per_page==50 %}selected{% endif %}>50</option>
+                        <option value="100" {% if pagination.per_page==100 %}selected{% endif %}>100</option>
+                    </select>
+                </div>
+            </div>
+            {% endif %}
+
+            {% else %}
+            <!-- Empty State -->
+            <div class="empty-state">
+                <div class="empty-icon">📭</div>
+                <h3>No hay comentarios en el sistema</h3>
+                <p>El sistema no contiene comentarios para mostrar en este momento.</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Back Navigation -->
+        <div class="navigation-section">
+            <a href="{{ url_for('main.welcome') }}" class="btn btn-secondary">
+                ↩️ Volver al Inicio
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+
+    // Function to change per page value
+    function changePerPage(value) {
+        const url = new URL(window.location);
+        url.searchParams.set('per_page', value);
+        url.searchParams.set('page', 1); // Reset to first page
+        window.location.href = url.toString();
+    }
+</script>
+{% endblock %}

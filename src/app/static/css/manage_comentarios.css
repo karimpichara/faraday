@@ -1,0 +1,335 @@
+/* Comentarios Management Styles - New Design Matching Ordenes Page */
+
+/* Dev-only styling */
+.dev-only-notice {
+    background: #fff3cd;
+    border: 1px solid #ffeaa7;
+    border-radius: 6px;
+    padding: 12px 16px;
+    margin: 15px 0;
+    color: #856404;
+    font-size: 0.9em;
+    font-weight: 500;
+}
+
+/* Statistics Section */
+.stats-container {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.stat-card {
+    background: white;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+    flex: 1;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    transition: transform 0.2s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.stat-number {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #007bff;
+    display: block;
+    margin-bottom: 8px;
+}
+
+.stat-label {
+    font-size: 0.9em;
+    color: #6c757d;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 500;
+}
+
+/* Comentarios List */
+.comentarios-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.comentario-card {
+    background: white;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    transition: box-shadow 0.2s;
+}
+
+.comentario-card:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.comentario-card.inactive {
+    background: #f8f9fa;
+    border-color: #dee2e6;
+    opacity: 0.8;
+}
+
+.comentario-info {
+    flex-grow: 1;
+    margin-right: 20px;
+}
+
+.comentario-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 12px;
+}
+
+.comentario-id {
+    font-size: 1.1em;
+    font-weight: bold;
+    color: #2c3e50;
+    margin: 0;
+}
+
+.comentario-status {
+    padding: 4px 10px;
+    border-radius: 15px;
+    font-size: 0.75em;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.status-active {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.status-inactive {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.comentario-content {
+    margin: 12px 0;
+    padding: 12px 15px;
+    background: #f8f9fa;
+    border-left: 4px solid #007bff;
+    border-radius: 4px;
+    font-style: italic;
+    line-height: 1.4;
+    color: #495057;
+}
+
+.comentario-details {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.detail-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.detail-label {
+    font-size: 0.8em;
+    color: #6c757d;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.detail-value {
+    font-size: 0.9em;
+    color: #495057;
+    font-weight: 500;
+}
+
+.badge-small {
+    background: #28a745;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.75em;
+    font-weight: 500;
+}
+
+.comentario-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-end;
+}
+
+.btn-small {
+    padding: 8px 16px;
+    font-size: 0.85em;
+    min-width: 120px;
+    text-align: center;
+    border-radius: 4px;
+    font-weight: 500;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-danger {
+    background: #dc3545;
+    color: white;
+}
+
+.btn-danger:hover {
+    background: #c82333;
+    text-decoration: none;
+    color: white;
+}
+
+.btn-success {
+    background: #28a745;
+    color: white;
+}
+
+.btn-success:hover {
+    background: #218838;
+    text-decoration: none;
+    color: white;
+}
+
+/* Pagination */
+.pagination-container {
+    margin-top: 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+}
+
+.pagination {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.pagination-btn {
+    padding: 8px 12px;
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    text-decoration: none;
+    color: #495057;
+    transition: all 0.2s;
+}
+
+.pagination-btn:hover:not(.disabled):not(.active) {
+    background: #e9ecef;
+    text-decoration: none;
+    color: #495057;
+}
+
+.pagination-btn.active {
+    background: #007bff;
+    color: white;
+    border-color: #007bff;
+}
+
+.pagination-btn.disabled {
+    background: #f8f9fa;
+    color: #6c757d;
+    cursor: not-allowed;
+    border-color: #dee2e6;
+}
+
+.pagination-ellipsis {
+    padding: 8px 4px;
+    color: #6c757d;
+}
+
+.per-page-selector {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.9em;
+    color: #6c757d;
+}
+
+.per-page-selector select {
+    padding: 4px 8px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    background: white;
+    font-size: 0.9em;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .stats-container {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .comentario-card {
+        flex-direction: column;
+        gap: 15px;
+        align-items: stretch;
+    }
+    
+    .comentario-info {
+        margin-right: 0;
+    }
+    
+    .comentario-actions {
+        flex-direction: row;
+        justify-content: flex-end;
+        align-items: center;
+    }
+    
+    .comentario-details {
+        gap: 15px;
+    }
+    
+    .detail-item {
+        min-width: 120px;
+    }
+    
+    .pagination {
+        gap: 3px;
+    }
+    
+    .pagination-btn {
+        padding: 6px 10px;
+        font-size: 0.85em;
+    }
+}
+
+@media (max-width: 480px) {
+    .comentario-card {
+        padding: 15px;
+    }
+    
+    .stat-card {
+        padding: 15px;
+    }
+    
+    .stat-number {
+        font-size: 1.5rem;
+    }
+    
+    .comentario-content {
+        padding: 10px 12px;
+        font-size: 0.9em;
+    }
+}

@@ -250,3 +250,147 @@ class ComentariosUseCase:
 
         except Exception as e:
             raise RuntimeError(f"Error al obtener comentarios: {str(e)}") from e
+
+    def get_all_comentarios_for_admin(
+        self, page: int = 1, per_page: int = 20
+    ) -> dict[str, Any]:
+        """
+        Get paginated comentarios from the system including inactive ones (for admin panel).
+
+        Args:
+            page: Page number (1-based)
+            per_page: Number of items per page
+
+        Returns:
+            Dictionary with paginated comentarios data including inactive ones
+
+        Raises:
+            RuntimeError: If database operation fails
+        """
+        try:
+            # Get paginated comentarios
+            pagination_result = self.comentarios_service.get_comentarios_paginated(
+                page, per_page
+            )
+
+            # Get total counts for statistics (we need all comentarios for this)
+            all_comentarios = (
+                self.comentarios_service.get_all_comentarios_including_inactive()
+            )
+            total_count = len(all_comentarios)
+            active_count = len([c for c in all_comentarios if c.active])
+            inactive_count = len([c for c in all_comentarios if not c.active])
+
+            return {
+                "comentarios": [
+                    {
+                        "id": comentario.id,
+                        "comentario": comentario.comentario,
+                        "num_ticket": comentario.num_ticket,
+                        "created_at": comentario.created_at.isoformat(),
+                        "updated_at": comentario.updated_at.isoformat(),
+                        "id_usuario": comentario.id_usuario,
+                        "id_orden_trabajo": comentario.id_orden_trabajo,
+                        "imagen_path": comentario.imagen_path,
+                        "imagen_original_name": comentario.imagen_original_name,
+                        "active": comentario.active,
+                    }
+                    for comentario in pagination_result["items"]
+                ],
+                "pagination": {
+                    "page": pagination_result["page"],
+                    "per_page": pagination_result["per_page"],
+                    "pages": pagination_result["pages"],
+                    "total": pagination_result["total"],
+                    "has_prev": pagination_result["has_prev"],
+                    "has_next": pagination_result["has_next"],
+                    "prev_num": pagination_result["prev_num"],
+                    "next_num": pagination_result["next_num"],
+                },
+                "total": total_count,
+                "active_count": active_count,
+                "inactive_count": inactive_count,
+            }
+
+        except Exception as e:
+            raise RuntimeError(f"Error al obtener comentarios: {str(e)}") from e
+
+    def soft_delete_comentario(self, comentario_id: int) -> dict[str, Any]:
+        """
+        Soft delete a comentario (admin only operation).
+
+        Args:
+            comentario_id: Comentario ID
+
+        Returns:
+            Dictionary with operation results
+
+        Raises:
+            ValueError: If comentario not found
+            RuntimeError: If database operation fails
+        """
+        try:
+            # Get comentario to verify it exists
+            comentario = self.comentarios_service.get_comentario_by_id(comentario_id)
+            if not comentario:
+                raise ValueError(f"Comentario con ID {comentario_id} no encontrado")
+
+            if not comentario.active:
+                raise ValueError("El comentario ya está inactivo")
+
+            # Soft delete the comentario
+            success = self.comentarios_service.soft_delete_comentario(comentario_id)
+            if not success:
+                raise RuntimeError("Error al desactivar el comentario")
+
+            return {
+                "success": True,
+                "message": f"Comentario #{comentario_id} desactivado exitosamente",
+                "comentario_id": comentario_id,
+            }
+
+        except ValueError:
+            # Re-raise validation errors
+            raise
+        except Exception as e:
+            raise RuntimeError(f"Error al desactivar comentario: {str(e)}") from e
+
+    def restore_comentario(self, comentario_id: int) -> dict[str, Any]:
+        """
+        Restore a soft deleted comentario (admin only operation).
+
+        Args:
+            comentario_id: Comentario ID
+
+        Returns:
+            Dictionary with operation results
+
+        Raises:
+            ValueError: If comentario not found
+            RuntimeError: If database operation fails
+        """
+        try:
+            # Get comentario to verify it exists
+            comentario = self.comentarios_service.get_comentario_by_id(comentario_id)
+            if not comentario:
+                raise ValueError(f"Comentario con ID {comentario_id} no encontrado")
+
+            if comentario.active:
+                raise ValueError("El comentario ya está activo")
+
+            # Restore the comentario
+            success = self.comentarios_service.restore_comentario(comentario_id)
+            if not success:
+                raise RuntimeError("Error al restaurar el comentario")
+
+            return {
+                "success": True,
+                "message": f"Comentario #{comentario_id} restaurado exitosamente",
+                "comentario_id": comentario_id,
+            }
+
+        except ValueError:
+            # Re-raise validation errors
+            raise
+        except Exception as e:
+            raise RuntimeError(f"Error al restaurar comentario: {str(e)}") from e

@@ -16,6 +16,7 @@ main_bp = Blueprint("main", __name__)
 
 # Route Constants
 MAIN_MANAGE_USERS_ROUTE = "main.manage_users"
+MAIN_MANAGE_COMENTARIOS_ROUTE = "main.manage_comentarios"
 
 
 @main_bp.route("/healthcheck")
@@ -196,3 +197,81 @@ def restore_user(user_id):
         flash(f"Error inesperado: {str(e)}", "error")
 
     return redirect(url_for(MAIN_MANAGE_USERS_ROUTE))
+
+
+# Dev-only comentarios management routes
+@main_bp.route("/comentarios", methods=["GET"])
+@dev_only()
+def manage_comentarios():
+    """
+    Comentarios management panel - accessible only by 'dev' user.
+
+    GET: Display paginated comentarios with soft delete/restore options
+    """
+    try:
+        # Get pagination parameters
+        page = request.args.get("page", 1, type=int)
+        per_page = request.args.get("per_page", 20, type=int)
+
+        # Validate pagination parameters
+        if page < 1:
+            page = 1
+        if per_page < 5 or per_page > 100:
+            per_page = 20
+
+        # Get paginated comentarios including inactive ones
+        comentarios_data = services.comentarios_use_case.get_all_comentarios_for_admin(
+            page, per_page
+        )
+
+        return render_template(
+            "manage_comentarios.html",
+            username=current_user.username,
+            comentarios=comentarios_data["comentarios"],
+            pagination=comentarios_data["pagination"],
+            total=comentarios_data["total"],
+            active_count=comentarios_data["active_count"],
+            inactive_count=comentarios_data["inactive_count"],
+        )
+
+    except Exception as e:
+        flash(f"Error inesperado: {str(e)}", "error")
+        return redirect(url_for("main.welcome"))
+
+
+@main_bp.route("/comentarios/<int:comentario_id>/soft_delete", methods=["POST"])
+@dev_only()
+def soft_delete_comentario(comentario_id):
+    """
+    Soft delete a comentario - accessible only by 'dev' user.
+    """
+    try:
+        # Soft delete comentario through use case
+        result = services.comentarios_use_case.soft_delete_comentario(comentario_id)
+        flash(result["message"], "success")
+
+    except ValueError as e:
+        flash(str(e), "error")
+    except Exception as e:
+        flash(f"Error inesperado: {str(e)}", "error")
+
+    return redirect(url_for(MAIN_MANAGE_COMENTARIOS_ROUTE))
+
+
+@main_bp.route("/comentarios/<int:comentario_id>/restore", methods=["POST"])
+@dev_only()
+def restore_comentario(comentario_id):
+    """
+    Restore a soft-deleted comentario - accessible only by 'dev' user.
+    """
+    try:
+        # Restore comentario through use case
+        result = services.comentarios_use_case.restore_comentario(comentario_id)
+        flash(result["message"], "success")
+
+    except ValueError as e:
+        flash(str(e), "error")
+    except Exception as e:
+        flash(f"Error inesperado: {str(e)}", "error")
+
+    return redirect(url_for(MAIN_MANAGE_COMENTARIOS_ROUTE))
