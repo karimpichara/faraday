@@ -32,9 +32,10 @@ def create_app() -> Flask:
 
     # Register blueprints
     from src.blueprints.main import main_bp
-    from src.blueprints.toa import toa_bp
+    from src.blueprints.toa import toa_bp, toa_api_bp
 
     app.register_blueprint(main_bp)
     app.register_blueprint(toa_bp)
+    app.register_blueprint(toa_api_bp)
 
     return app

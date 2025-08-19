@@ -181,3 +181,29 @@ class TecnicoSupervisorUseCase:
                 for tecnico in tecnicos
             ],
         }
+
+    def get_all_tecnicos_supervisores(self) -> dict[str, Any]:
+        """
+        Get all tecnicos supervisores from all empresas.
+
+        Returns:
+            Dictionary with all tecnicos data
+        """
+        tecnicos = self.tecnico_supervisor_service.get_all_tecnicos_supervisores()
+
+        return {
+            "tecnicos_supervisores": [
+                {
+                    "id": tecnico.id,
+                    "nombre_tecnico": tecnico.nombre_tecnico,
+                    "rut_tecnico": tecnico.rut_tecnico,
+                    "nombre_supervisor": tecnico.nombre_supervisor,
+                    "id_empresa": tecnico.id_empresa,
+                    "created_at": tecnico.created_at.isoformat(),
+                    "updated_at": tecnico.updated_at.isoformat(),
+                    "active": tecnico.active,
+                }
+                for tecnico in tecnicos
+            ],
+            "total": len(tecnicos),
+        }

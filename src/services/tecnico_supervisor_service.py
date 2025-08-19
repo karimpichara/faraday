@@ -115,3 +115,12 @@ class TecnicoSupervisorService:
             TecnicoSupervisor instance or None if not found
         """
         return TecnicoSupervisor.active_records().filter_by(id=tecnico_id).first()
+
+    def get_all_tecnicos_supervisores(self) -> list[TecnicoSupervisor]:
+        """
+        Get all active tecnicos supervisores from all empresas.
+
+        Returns:
+            List of all active TecnicoSupervisor instances
+        """
+        return TecnicoSupervisor.active_records().all()
