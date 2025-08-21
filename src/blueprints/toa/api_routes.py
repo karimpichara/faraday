@@ -193,3 +193,30 @@ def get_all_tecnicos_supervisores():
     except Exception as e:
         # Unexpected errors
         return jsonify({"error": f"Error inesperado: {str(e)}"}), 500
+
+
+@toa_api_bp.route("/toa/historia_ot_empresas", methods=["GET"])
+@require_basic_auth()
+def get_all_historia_ot_empresas():
+    """
+    Get all historia OT empresas from the system.
+
+    Headers:
+        Token: Authentication token (configured via API_TOKEN env var)
+
+    Returns:
+        JSON response with all historia OT empresas data including:
+        - historia_ot_empresas: List of all records with full details
+        - total: Total number of records
+    """
+    try:
+        # Get all historia OT empresas through use case (no token needed, already validated)
+        result = services.historia_iniciados_use_case.get_all_historia_ot_empresas()
+        return jsonify(result), 200
+
+    except RuntimeError as e:
+        # Database or system errors
+        return jsonify({"error": str(e)}), 500
+    except Exception as e:
+        # Unexpected errors
+        return jsonify({"error": f"Error inesperado: {str(e)}"}), 500
