@@ -1,0 +1,147 @@
+{% extends "_page_base.html" %}
+
+{% block title %}Cargar Técnicos desde Excel{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/upload_tecnicos_excel.css') }}">
+{% endblock %}
+
+{% block page_content %}
+<div class="main-container">
+    <div class="upload-form-card">
+        <div class="upload-header">
+            <div class="upload-icon">📊</div>
+            <h1 class="page-title">Cargar Técnicos desde Excel</h1>
+            <p class="page-subtitle">Carga masiva de técnicos y supervisores desde archivo Excel</p>
+        </div>
+
+        <div class="empresa-badge">
+            Usuario Dev: Puede cargar técnicos para cualquier empresa
+        </div>
+
+        <!-- Requirements Section -->
+        <div class="requirements-section">
+            <div class="requirements-title">📋 Requisitos del archivo Excel:</div>
+            <ul class="requirements-list">
+                <li>El archivo debe tener formato .xlsx o .xls</li>
+                <li>La primera fila debe contener los encabezados de las columnas</li>
+                <li>Columnas requeridas: <strong>nombre_tecnico</strong>, <strong>rut_tecnico</strong>,
+                    <strong>nombre_supervisor</strong>, <strong>id_empresa</strong>
+                </li>
+                <li>El <strong>id_empresa</strong> debe ser un número válido que exista en la base de datos</li>
+                <li>Puedes asignar técnicos a cualquier empresa especificando su ID</li>
+                <li>Las filas vacías o incompletas serán ignoradas</li>
+            </ul>
+        </div>
+
+        <!-- Upload Form -->
+        <form method="POST" enctype="multipart/form-data" id="upload-form">
+            <div class="file-upload-area" onclick="document.getElementById('excel_file').click()">
+                <div class="file-upload-text">
+                    📁 Haz clic aquí para seleccionar tu archivo Excel
+                </div>
+                <div class="file-info">
+                    O arrastra y suelta el archivo aquí<br>
+                    Formatos soportados: .xlsx, .xls
+                </div>
+                <input type="file" id="excel_file" name="excel_file" class="file-input" accept=".xlsx,.xls" required>
+            </div>
+
+            <div id="selected-file" class="selected-file" style="display: none;">
+                <span id="file-name"></span>
+            </div>
+
+            <div class="button-group">
+                <button type="submit" class="btn" id="upload-btn" disabled>
+                    ⬆️ Cargar Técnicos
+                </button>
+                <a href="{{ url_for('toa.manage_tecnicos') }}" class="btn btn-secondary">
+                    ➕ Agregar Manual
+                </a>
+                <a href="{{ url_for('toa.list_tecnicos') }}" class="btn btn-secondary">
+                    📋 Ver Lista
+                </a>
+            </div>
+        </form>
+
+        <div class="navigation-links">
+            <a href="{{ url_for('main.welcome') }}">↩️ Volver al Inicio</a>
+            <a href="{{ url_for('toa.manage_tecnicos') }}">➕ Gestión Manual</a>
+            <a href="{{ url_for('toa.list_tecnicos') }}">📋 Lista de Técnicos</a>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const fileInput = document.getElementById('excel_file');
+        const uploadArea = document.querySelector('.file-upload-area');
+        const selectedFileDiv = document.getElementById('selected-file');
+        const fileNameSpan = document.getElementById('file-name');
+        const uploadBtn = document.getElementById('upload-btn');
+
+        // File input change event
+        fileInput.addEventListener('change', function (e) {
+            const file = e.target.files[0];
+            if (file) {
+                showSelectedFile(file);
+            }
+        });
+
+        // Drag and drop events
+        uploadArea.addEventListener('dragover', function (e) {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', function (e) {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', function (e) {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                const file = files[0];
+                if (file.name.match(/\.(xlsx|xls)$/i)) {
+                    fileInput.files = files;
+                    showSelectedFile(file);
+                } else {
+                    alert('Por favor selecciona un archivo Excel (.xlsx o .xls)');
+                }
+            }
+        });
+
+        function showSelectedFile(file) {
+            fileNameSpan.textContent = `📄 ${file.name} (${formatFileSize(file.size)})`;
+            selectedFileDiv.style.display = 'block';
+            uploadBtn.disabled = false;
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        // Form validation
+        document.getElementById('upload-form').addEventListener('submit', function (e) {
+            if (!fileInput.files.length) {
+                e.preventDefault();
+                alert('Por favor selecciona un archivo antes de continuar.');
+                return false;
+            }
+
+            // Show loading state
+            uploadBtn.textContent = '⏳ Procesando...';
+            uploadBtn.disabled = true;
+        });
+    });
+</script>
+{% endblock %}

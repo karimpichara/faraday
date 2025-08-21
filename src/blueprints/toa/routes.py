@@ -16,6 +16,7 @@ from flask_login import current_user, login_required
 
 from src.app.extensions import services
 from src.utils.decorators import (
+    dev_only,
     require_token,
     require_token_and_json,
 )
@@ -28,6 +29,7 @@ MAIN_LOGIN_ROUTE = "main.login"
 TOA_MANAGE_TECNICOS_ROUTE = "toa.manage_tecnicos"
 TOA_LIST_TECNICOS_ROUTE = "toa.list_tecnicos"
 TOA_MANAGE_COMENTARIOS_ROUTE = "toa.manage_comentarios"
+TOA_UPLOAD_TECNICOS_EXCEL_ROUTE = "toa.upload_tecnicos_excel"
 
 
 def _handle_route_error(e, error_route=MAIN_WELCOME_ROUTE, route_name="route"):
@@ -404,6 +406,57 @@ def list_tecnicos():
 
     except Exception as e:
         return _handle_route_error(e, MAIN_WELCOME_ROUTE, "list_tecnicos")
+
+
+@toa_bp.route("/tecnicos/upload", methods=["GET", "POST"])
+@dev_only()
+def upload_tecnicos_excel():
+    """Route for uploading Excel files with technician data."""
+    try:
+        if request.method == "POST":
+            # Check if file was uploaded
+            if "excel_file" not in request.files:
+                flash("No se ha seleccionado ningún archivo", "error")
+                return redirect(url_for(TOA_UPLOAD_TECNICOS_EXCEL_ROUTE))
+
+            file = request.files["excel_file"]
+
+            if file.filename == "":
+                flash("No se ha seleccionado ningún archivo", "error")
+                return redirect(url_for(TOA_UPLOAD_TECNICOS_EXCEL_ROUTE))
+
+            # Process the Excel file
+            result = services.tecnico_supervisor_use_case.process_excel_upload(
+                user=current_user, file_storage=file
+            )
+
+            # Create detailed success message
+            file_info = result.get("file_info", {})
+            message_parts = [result["message"]]
+
+            if file_info:
+                message_parts.append(
+                    f"Archivo: {file_info['filename']}, "
+                    f"Filas procesadas: {file_info['valid_rows_processed']}/{file_info['total_rows_in_file']}"
+                )
+
+            flash(" - ".join(message_parts), "success")
+            return redirect(url_for(TOA_LIST_TECNICOS_ROUTE))
+
+        else:
+            # GET request - show upload form
+            return render_template(
+                "upload_tecnicos_excel.html",
+                username=current_user.username,
+            )
+
+    except ValueError as e:
+        flash(str(e), "error")
+        return redirect(url_for(TOA_UPLOAD_TECNICOS_EXCEL_ROUTE))
+    except Exception as e:
+        return _handle_route_error(
+            e, TOA_MANAGE_TECNICOS_ROUTE, "upload_tecnicos_excel"
+        )
 
 
 @toa_bp.route("/comentarios/imagen/<int:comentario_id>")

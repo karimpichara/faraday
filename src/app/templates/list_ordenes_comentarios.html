@@ -63,8 +63,8 @@
                         <select id="empresa_id" name="empresa_id" class="form-input">
                             <option value="">Todas las empresas</option>
                             {% for empresa in all_empresas %}
-                            <option value="{{ empresa.id }}" 
-                                {% if search_filters.empresa_id == empresa.id %}selected{% endif %}>
+                            <option value="{{ empresa.id }}" {% if search_filters.empresa_id==empresa.id %}selected{%
+                                endif %}>
                                 {{ empresa.nombre }} ({{ empresa.nombre_toa }})
                             </option>
                             {% endfor %}
@@ -212,13 +212,16 @@
                 <div class="empty-icon">📭</div>
                 <h3>No se encontraron órdenes de trabajo</h3>
                 <p>
-                    {% if search_filters.codigo or search_filters.fecha_inicio or search_filters.fecha_fin or search_filters.empresa_id %}
+                    {% if search_filters.codigo or search_filters.fecha_inicio or search_filters.fecha_fin or
+                    search_filters.empresa_id %}
                     Intenta ajustar los filtros de búsqueda o limpiar la búsqueda para ver todas las órdenes.
                     {% else %}
-                    {% if is_admin %}No hay órdenes de trabajo en el sistema.{% else %}No tienes órdenes de trabajo disponibles en este momento.{% endif %}
+                    {% if is_admin %}No hay órdenes de trabajo en el sistema.{% else %}No tienes órdenes de trabajo
+                    disponibles en este momento.{% endif %}
                     {% endif %}
                 </p>
-                {% if search_filters.codigo or search_filters.fecha_inicio or search_filters.fecha_fin or search_filters.empresa_id %}
+                {% if search_filters.codigo or search_filters.fecha_inicio or search_filters.fecha_fin or
+                search_filters.empresa_id %}
                 <a href="{{ url_for('toa.list_ordenes_comentarios') }}" class="btn btn-primary">
                     🗑️ Limpiar Búsqueda
                 </a>
