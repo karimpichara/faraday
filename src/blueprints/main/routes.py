@@ -17,6 +17,10 @@ main_bp = Blueprint("main", __name__)
 # Route Constants
 MAIN_MANAGE_USERS_ROUTE = "main.manage_users"
 MAIN_MANAGE_COMENTARIOS_ROUTE = "main.manage_comentarios"
+MAIN_MANAGE_EMPRESAS_ROUTE = "main.manage_empresas"
+
+# Template Constants
+MANAGE_EMPRESAS_TEMPLATE = "manage_empresas.html"
 
 
 @main_bp.route("/healthcheck")
@@ -275,3 +279,52 @@ def restore_comentario(comentario_id):
         flash(f"Error inesperado: {str(e)}", "error")
 
     return redirect(url_for(MAIN_MANAGE_COMENTARIOS_ROUTE))
+
+
+@main_bp.route("/empresas", methods=["GET", "POST"])
+@dev_only()
+def manage_empresas():
+    """
+    Manage empresas - GET: Show list and add form, POST: Create new empresa
+    """
+    try:
+        if request.method == "POST":
+            # Get form data
+            nombre = request.form.get("nombre", "")
+            nombre_toa = request.form.get("nombre_toa", "")
+            rut = request.form.get("rut", "")
+
+            # Create empresa through use case
+            result = services.empresas_externas_use_case.create_empresa(
+                nombre, nombre_toa, rut
+            )
+
+            flash(result["message"], "success")
+
+        # Get current empresas list for display
+        empresas = services.empresas_externas_use_case.get_empresas_externas_toa_all()
+
+        return render_template(
+            MANAGE_EMPRESAS_TEMPLATE,
+            username=current_user.username,
+            empresas=empresas,
+        )
+
+    except ValueError as e:
+        # Validation errors
+        flash(str(e), "error")
+        empresas = services.empresas_externas_use_case.get_empresas_externas_toa_all()
+        return render_template(
+            MANAGE_EMPRESAS_TEMPLATE,
+            username=current_user.username,
+            empresas=empresas,
+        )
+    except Exception as e:
+        # Unexpected errors
+        flash(f"Error inesperado: {str(e)}", "error")
+        empresas = []
+        return render_template(
+            MANAGE_EMPRESAS_TEMPLATE,
+            username=current_user.username,
+            empresas=empresas,
+        )

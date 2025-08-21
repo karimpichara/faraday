@@ -1,0 +1,116 @@
+{% extends "_page_base.html" %}
+
+{% block title %}Gestión de Empresas{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+{% endblock %}
+
+{% block page_content %}
+<div class="user-management-container">
+    <h1 class="page-title">🏢 Gestión de Empresas</h1>
+    <p class="page-subtitle">Panel de administración exclusivo para usuario 'dev'</p>
+
+    <div class="dev-only-notice">
+        🔒 Acceso Restringido: Solo el usuario 'dev' puede gestionar empresas del sistema
+    </div>
+
+    <!-- Statistics -->
+    {% if empresas %}
+    <div class="empresas-stats">
+        <div class="stats-title">Empresas Registradas</div>
+        <div class="stats-number">{{ empresas|length }}</div>
+        <div>empresas activas en el sistema</div>
+    </div>
+    {% endif %}
+
+    <!-- Add Empresa Form -->
+    <div class="form-card">
+        <div class="form-header">
+            <h2>➕ Crear Nueva Empresa</h2>
+        </div>
+
+        <div class="form-content">
+            <form method="POST" action="{{ url_for('main.manage_empresas') }}" id="empresa-form">
+                <div class="form-group">
+                    <label for="nombre" class="form-label">Nombre de la Empresa:</label>
+                    <input type="text" id="nombre" name="nombre" class="form-input" required
+                        placeholder="Ingrese el nombre completo de la empresa">
+                    <small class="form-help">Nombre comercial de la empresa (ej: Empresa Constructora ABC)</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="nombre_toa" class="form-label">Nombre TOA:</label>
+                    <input type="text" id="nombre_toa" name="nombre_toa" class="form-input" required
+                        placeholder="Ingrese el nombre para TOA">
+                    <small class="form-help">Nombre utilizado en el sistema TOA (ej: ABC_CONST)</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="rut" class="form-label">RUT:</label>
+                    <input type="text" id="rut" name="rut" class="form-input" required
+                        placeholder="Ingrese el RUT de la empresa (ej: 12.345.678-9)">
+                    <small class="form-help">RUT de la empresa con puntos y guión</small>
+                </div>
+
+                <button type="submit" class="submit-btn">
+                    ➕ Crear Empresa
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Empresas List -->
+    <div class="list-section">
+        <div class="list-header">
+            <h2>📋 Empresas Registradas</h2>
+            <span class="list-count">{{ empresas|length }} empresa{{ 's' if empresas|length != 1 else '' }}</span>
+        </div>
+
+        <div class="list-content">
+            {% if empresas %}
+                {% for empresa in empresas %}
+                <div class="empresa-card">
+                    <div class="empresa-header">
+                        <h3 class="empresa-name">{{ empresa.nombre }}</h3>
+                        <span class="empresa-id">ID: {{ empresa.id }}</span>
+                    </div>
+                    <div class="empresa-details">
+                        <div class="empresa-detail">
+                            <span class="empresa-detail-label">Nombre TOA</span>
+                            <span class="empresa-detail-value">{{ empresa.nombre_toa }}</span>
+                        </div>
+                        <div class="empresa-detail">
+                            <span class="empresa-detail-label">RUT</span>
+                            <span class="empresa-detail-value">{{ empresa.rut }}</span>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    <div class="empty-state-icon">🏢</div>
+                    <div class="empty-state-title">No hay empresas registradas</div>
+                    <div class="empty-state-message">
+                        Comienza creando tu primera empresa usando el formulario de arriba.
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <div class="navigation-section">
+        <a href="{{ url_for('main.welcome') }}" class="back-btn">
+            ← Volver al Inicio
+        </a>
+    </div>
+</div>
+
+{% if request.method == 'POST' and not get_flashed_messages(category_filter=['error']) %}
+<script>
+    // Clear form after successful submission (if no errors)
+    document.getElementById('empresa-form').reset();
+</script>
+{% endif %}
+{% endblock %}
